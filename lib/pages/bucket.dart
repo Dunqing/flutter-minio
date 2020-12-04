@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:MinioClient/minio/minio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:minio/io.dart';
 import 'package:minio/models.dart';
+import 'package:path_provider/path_provider.dart';
 
 class BucketRoute extends StatefulWidget {
   BucketRoute({Key key, this.bucketName, this.prefix = ''}) : super(key: key);
@@ -38,6 +37,7 @@ class _BucketRoute extends State<BucketRoute> {
         minio.listObjectsV2(widget.bucketName, prefix: widget.prefix);
     await for (var obj in objects) {
       setState(() {
+        this.bucketObjects.clear();
         this.bucketObjects.addAll(obj.objects);
       });
     }
@@ -73,12 +73,11 @@ class _BucketRoute extends State<BucketRoute> {
                 trailing:
                     new Icon(Icons.download_sharp, color: Colors.blueGrey),
                 onTap: () async {
-                  final dir = Directory('./');
-                  print(dir.path);
-                  print(widget.bucketName);
-                  print(currentObj.key);
+                  final dir = await getExternalStorageDirectory();
+                  print('dir, $dir');
                   minio
-                      .fGetObject(widget.bucketName, currentObj.key, dir.path)
+                      .fGetObject(widget.bucketName, currentObj.key,
+                          '${dir.path}/${currentObj.key}')
                       .then((value) {
                     print('download ok');
                   });
@@ -105,11 +104,21 @@ class _BucketRoute extends State<BucketRoute> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           FilePickerResult result = await FilePicker.platform.pickFiles();
+          if (result == null ||
+              result?.files == null ||
+              result?.files?.length == 0) {
+            print('取消了上传');
+            return;
+          }
           final file = result.files[0];
-          minio.fPutObject(widget.bucketName, file.name, file.path);
+          minio
+              .fPutObject(widget.bucketName, file.name, file.path)
+              .then((value) {
+            this.getBucketObjects();
+          });
         },
         tooltip: '上传文件',
-        child: Icon(Icons.upload_file),
+        child: Icon(Icons.upload_rounded),
       ),
     );
   }
