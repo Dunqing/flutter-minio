@@ -5,7 +5,7 @@ buildscript {
         jcenter()
         // maven { url 'https://maven.aliyun.com/repository/google' }
         // maven { url 'https://maven.aliyun.com/repository/public' }
-        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' } //添加这一句
+        maven { url 'https://mirrors.tuna.tsinghua.edu.cn/flutter/download.flutter.io' }
     }
 
     dependencies {
@@ -20,7 +20,7 @@ allprojects {
         jcenter()
         // maven { url 'https://maven.aliyun.com/repository/google' }
         // maven { url 'https://maven.aliyun.com/repository/public' }
-        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' } //添加这一句
+        maven { url 'https://mirrors.tuna.tsinghua.edu.cn/flutter/download.flutter.io' }
     }
 }
 
