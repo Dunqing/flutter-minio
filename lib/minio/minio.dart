@@ -8,3 +8,11 @@ final minio = Minio(
   secretKey: 'minio123',
   region: 'cn-north-1',
 );
+
+class Prefix {
+  bool isPrefix;
+  String key;
+  String prefix;
+
+  Prefix({this.key, this.prefix, this.isPrefix});
+}
