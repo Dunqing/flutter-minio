@@ -208,7 +208,20 @@ class _BucketRoute extends State<BucketRoute> {
             },
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-            onPressed: _uploadFile, child: Icon(Icons.file_upload)));
+        floatingActionButton: Stack(
+          alignment: Alignment.bottomRight,
+          overflow: Overflow.visible,
+          children: [
+            FloatingActionButton(
+              onPressed: null,
+              child:
+                  AnimatedIcon(icon: AnimatedIcons.menu_close, progress: null),
+            ),
+            Positioned(
+              top: -100,
+              child: FloatingActionButton(onPressed: null, child: Text('111')),
+            ),
+          ],
+        ));
   }
 }
