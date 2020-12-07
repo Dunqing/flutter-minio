@@ -92,7 +92,7 @@ class _BucketRoute extends State<BucketRoute> {
 
   Widget _renderLeading(obj) {
     final key = obj.key;
-    if (key is Prefix) {
+    if (obj is Prefix) {
       return Icon(Icons.folder);
     }
     if (key is String) {
@@ -130,6 +130,12 @@ class _BucketRoute extends State<BucketRoute> {
         if (widget.bucketName != null) {
           final currentObj = this.bucketObjects[index];
           final isPrefix = currentObj is Prefix;
+          if (!isPrefix) {
+            if (currentObj.lastModified is DateTime) {
+              print(
+                  (currentObj.lastModified as DateTime).microsecondsSinceEpoch);
+            }
+          }
           element = ListTile(
             leading: _renderLeading(currentObj),
             title: Text(currentObj.key),
