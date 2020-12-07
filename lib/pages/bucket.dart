@@ -132,6 +132,9 @@ class _BucketRoute extends State<BucketRoute> {
           final isPrefix = currentObj is Prefix;
           if (!isPrefix) {
             if (currentObj.lastModified is DateTime) {
+              final time =
+                  (currentObj.lastModified as DateTime).microsecondsSinceEpoch;
+              // DateFormat(time: time);
               print(
                   (currentObj.lastModified as DateTime).microsecondsSinceEpoch);
             }
