@@ -25,7 +25,9 @@ class PreviewNetwork {
                       ImageChunkEvent event) {
                     return AnimatedSwitcher(
                         duration: Duration(milliseconds: 500),
-                        child: child ?? Loading(child: LoopBoxLoading()));
+                        child: event != null
+                            ? child
+                            : Loading(child: LoopBoxLoading()));
                   },
                   alignment: Alignment.center,
                   fit: BoxFit.fitWidth,
