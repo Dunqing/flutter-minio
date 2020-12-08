@@ -132,7 +132,15 @@ class _BucketRoute extends State<BucketRoute> {
           final currentObj = this.bucketObjects[index];
           // 是否为路径
           final isPrefix = currentObj is Prefix;
-
+          if (!isPrefix) {
+            if (currentObj.lastModified is DateTime) {
+              final time =
+                  (currentObj.lastModified as DateTime).microsecondsSinceEpoch;
+              // DateFormat(time: time);
+              print(
+                  (currentObj.lastModified as DateTime).microsecondsSinceEpoch);
+            }
+          }
           element = ListTile(
             leading: _renderLeading(currentObj),
             title: Text(currentObj.key.replaceAll(widget.prefix, '')),
