@@ -1,5 +1,6 @@
 import 'package:MinioClient/minio/minio.dart';
 import 'package:MinioClient/widgets/FloatingActionExtendButton/index.dart';
+import 'package:MinioClient/widgets/PreviewNetwork/preview_network.dart';
 import 'package:flutter/material.dart';
 import 'package:minio/models.dart';
 
@@ -92,7 +93,7 @@ class _BucketRoute extends State<BucketRoute> {
 
   Widget _renderLeading(obj) {
     final key = obj.key;
-    if (key is Prefix) {
+    if (obj is Prefix) {
       return Icon(Icons.folder);
     }
     if (key is String) {
@@ -129,10 +130,12 @@ class _BucketRoute extends State<BucketRoute> {
         var element;
         if (widget.bucketName != null) {
           final currentObj = this.bucketObjects[index];
+          // 是否为路径
           final isPrefix = currentObj is Prefix;
+
           element = ListTile(
             leading: _renderLeading(currentObj),
-            title: Text(currentObj.key),
+            title: Text(currentObj.key.replaceAll(widget.prefix, '')),
             subtitle: isPrefix
                 ? null
                 : Row(
@@ -169,9 +172,14 @@ class _BucketRoute extends State<BucketRoute> {
   _renderMoreMenu(currentObj) {
     return PopupMenuButton(
       onSelected: (value) async {
+        print('value $value');
         switch (value) {
           case 'download':
             this.minioController.downloadFile(currentObj.key);
+            break;
+          case 'preview':
+            this._preview(currentObj.key);
+            break;
         }
       },
       itemBuilder: (buildContext) {
@@ -226,5 +234,12 @@ class _BucketRoute extends State<BucketRoute> {
         return list;
       },
     );
+  }
+
+  void _preview(filename) {
+    print(filename);
+    this.minioController.getPreviewUrl(filename).then((url) {
+      PreviewNetwork(context: this.context).preview(url);
+    });
   }
 }

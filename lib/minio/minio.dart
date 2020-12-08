@@ -48,10 +48,6 @@ class MinioController {
         return Prefix(key: key, prefix: prefix, isPrefix: true);
       }).toList();
 
-      obj.objects.forEach((element) {
-        element.key = element.key.replaceAll(prefix, '');
-      });
-
       map['prefixes'] = prefixs;
       map['objests'] = obj.objects;
     }
@@ -78,5 +74,15 @@ class MinioController {
     }
     final file = result.files[0];
     return minio.fPutObject(this.bucketName, file.name, file.path);
+  }
+
+  Future<String> presignedGetObject(filename, {int expires}) {
+    return this
+        .minio
+        .presignedGetObject(this.bucketName, filename, expires: expires);
+  }
+
+  Future<String> getPreviewUrl(filename) {
+    return this.presignedGetObject(filename, expires: 60 * 60 * 24);
   }
 }

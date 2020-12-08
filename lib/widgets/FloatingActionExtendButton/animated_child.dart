@@ -30,7 +30,7 @@ class AnimatedChild extends AnimatedWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Animation<double> animation = listenable;
+    final Animation<dynamic> animation = listenable;
 
     final Widget buttonChild = animation.value > 50.0
         ? Container(

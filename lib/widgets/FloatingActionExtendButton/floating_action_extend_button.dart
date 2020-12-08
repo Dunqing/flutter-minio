@@ -2,7 +2,6 @@ import 'package:MinioClient/widgets/FloatingActionExtendButton/animated_floating
 import 'package:MinioClient/widgets/FloatingActionExtendButton/floating_action_extend_child.dart';
 import 'package:flutter/material.dart';
 
-import 'NormalButton.dart';
 import 'animated_child.dart';
 
 class FloatingActionExtendButton extends StatefulWidget {
@@ -147,21 +146,19 @@ class _FloatingActionExtendButtonState extends State<FloatingActionExtendButton>
             progress: _controller)
         : widget.child;
 
-    final animatedFloatingButton = widget.normal
-        ? NormalButton(child)
-        : AnimatedFloatingButton(
-            elevation: widget.elevation,
-            tooltip: widget.tooltip,
-            backgroundColor: widget.backgroundColor,
-            foregroundColor: widget.foregroundColor,
-            callback: widget.onPress != null ? _toggleChildren : widget.onPress,
-            heroTag: widget.heroTag,
-            shape: widget.shape,
-            curve: widget.curve,
-            child: child,
-            visible: widget.visible,
-            onLongPress: _toggleChildren,
-            onTap: _toggleChildren);
+    final animatedFloatingButton = AnimatedFloatingButton(
+        elevation: widget.elevation,
+        tooltip: widget.tooltip,
+        backgroundColor: widget.backgroundColor,
+        foregroundColor: widget.foregroundColor,
+        callback: widget.onPress != null ? _toggleChildren : widget.onPress,
+        heroTag: widget.heroTag,
+        shape: widget.shape,
+        curve: widget.curve,
+        child: child,
+        visible: widget.visible,
+        onLongPress: _toggleChildren,
+        onTap: _toggleChildren);
 
     return Positioned(
       bottom: widget.marginBottom - 16,
