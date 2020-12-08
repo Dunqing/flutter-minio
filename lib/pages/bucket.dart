@@ -1,4 +1,6 @@
 import 'package:MinioClient/minio/minio.dart';
+import 'package:MinioClient/utils/time.dart';
+import 'package:MinioClient/utils/utils.dart';
 import 'package:MinioClient/widgets/FloatingActionExtendButton/index.dart';
 import 'package:MinioClient/widgets/PreviewNetwork/preview_network.dart';
 import 'package:flutter/material.dart';
@@ -132,15 +134,6 @@ class _BucketRoute extends State<BucketRoute> {
           final currentObj = this.bucketObjects[index];
           // 是否为路径
           final isPrefix = currentObj is Prefix;
-          if (!isPrefix) {
-            if (currentObj.lastModified is DateTime) {
-              final time =
-                  (currentObj.lastModified as DateTime).microsecondsSinceEpoch;
-              // DateFormat(time: time);
-              print(
-                  (currentObj.lastModified as DateTime).microsecondsSinceEpoch);
-            }
-          }
           element = ListTile(
             leading: _renderLeading(currentObj),
             title: Text(currentObj.key.replaceAll(widget.prefix, '')),
@@ -148,12 +141,13 @@ class _BucketRoute extends State<BucketRoute> {
                 ? null
                 : Row(
                     children: [
-                      // Text(currentObj.lastModified.toString()),
+                      Text(formatTime(
+                          'yyyy/MM/dd/ HH:mm', currentObj.lastModified)),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10.0),
+                        padding: EdgeInsets.symmetric(horizontal: 4.0),
                         child: Text('-'),
                       ),
-                      Text(currentObj.size.toString())
+                      Text(byteToSize(currentObj.size))
                     ],
                   ),
             trailing: isPrefix
@@ -245,8 +239,8 @@ class _BucketRoute extends State<BucketRoute> {
   }
 
   void _preview(filename) {
-    print(filename);
     this.minioController.getPreviewUrl(filename).then((url) {
+      print('$filename $url');
       PreviewNetwork(context: this.context).preview(url);
     });
   }

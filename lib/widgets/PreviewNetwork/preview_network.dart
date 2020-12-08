@@ -14,20 +14,24 @@ class PreviewNetwork {
         context: this.context,
         builder: (BuildContext context) {
           return Stack(children: [
-            Scrollbar(
-                child: SingleChildScrollView(
-              child: Stack(children: [
-                Image.network(
+            Container(
+              constraints: BoxConstraints.expand(),
+              alignment: Alignment.center,
+              child: Scrollbar(
+                  child: SingleChildScrollView(
+                child: Image.network(
                   url,
                   loadingBuilder: (BuildContext context, Widget child,
                       ImageChunkEvent event) {
-                    return Loading(child: LoopBoxLoading());
+                    return AnimatedSwitcher(
+                        duration: Duration(milliseconds: 500),
+                        child: child ?? Loading(child: LoopBoxLoading()));
                   },
-                  alignment: Alignment.topCenter,
+                  alignment: Alignment.center,
                   fit: BoxFit.fitWidth,
                 ),
-              ]),
-            )),
+              )),
+            ),
             Positioned(
                 right: 20,
                 top: 20,

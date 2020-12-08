@@ -29,10 +29,10 @@ class LoadingState extends State<Loading> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final info = MediaQuery.of(context);
     return Container(
       alignment: Alignment.center,
-      height: MediaQuery.of(context).size.height,
-      // child: TextLoading(text: '拼命加载中', animation: this.controller),
+      height: info.size.height - 56,
       child: widget.child,
     );
   }
