@@ -1,3 +1,4 @@
+import 'package:MinioClient/db/DownloadController.dart';
 import 'package:flutter/material.dart';
 
 class DownloadPage extends StatefulWidget {
@@ -8,14 +9,37 @@ class DownloadPage extends StatefulWidget {
 }
 
 class _DownloadPageState extends State<DownloadPage> {
+  DownloadController downloadController;
+  List<Map<String, dynamic>> downloadList = [];
+  _DownloadPageState() {
+    this.downloadController = DownloadController();
+  }
+
+  @override
+  void initState() {
+    this.getDownloadList();
+    super.initState();
+  }
+
+  getDownloadList() {
+    this.downloadController.finaAll().then((res) {
+      setState(() {
+        this.downloadList = res;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       child: ListView.builder(
-        itemCount: 1,
+        itemCount: downloadList.length,
         itemBuilder: (context, index) {
+          final current = this.downloadList[index];
           return ListTile(
-            title: Text('这是文件'),
+            title: Text(current['filename']),
+            subtitle: Text('下载总量 ${current['size']}'),
+            trailing: Text('${current['rate']}%'),
           );
         },
       ),

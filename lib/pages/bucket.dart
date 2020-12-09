@@ -1,3 +1,4 @@
+import 'package:MinioClient/db/DownloadController.dart';
 import 'package:MinioClient/minio/minio.dart';
 import 'package:MinioClient/pages/widgets/ShareDialog.dart';
 import 'package:MinioClient/utils/time.dart';
@@ -22,10 +23,12 @@ class _BucketRoute extends State<BucketRoute> {
   List<Bucket> buckets = [];
   List<dynamic> bucketObjects = [];
   MinioController minioController;
+  DownloadController downloadController;
 
   initState() {
     super.initState();
     this.minioController = MinioController(widget.bucketName, widget.prefix);
+    this.downloadController = DownloadController();
     if (widget != null && widget.bucketName != null) {
       this.getBucketObjects();
     } else {
@@ -229,7 +232,7 @@ class _BucketRoute extends State<BucketRoute> {
         print('value $value');
         switch (value) {
           case 'download':
-            this.minioController.downloadFile(currentObj.key);
+            this._download(currentObj);
             break;
           case 'preview':
             this._preview(currentObj.key);
@@ -405,5 +408,13 @@ class _BucketRoute extends State<BucketRoute> {
                 ]);
           });
         });
+  }
+
+  void _download(Object obj) {
+    final now = DateTime.now().millisecond;
+    this.downloadController.insert(obj.key, obj.size, now, now, 0).then((res) {
+      print(res);
+    });
+    // this.minioController.downloadFile(filename.key);
   }
 }
