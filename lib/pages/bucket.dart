@@ -1,9 +1,12 @@
 import 'package:MinioClient/minio/minio.dart';
+import 'package:MinioClient/pages/widgets/ShareDialog.dart';
 import 'package:MinioClient/utils/time.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:MinioClient/widgets/FloatingActionExtendButton/index.dart';
 import 'package:MinioClient/widgets/PreviewNetwork/preview_network.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:minio/models.dart';
 
 class BucketRoute extends StatefulWidget {
@@ -115,6 +118,10 @@ class _BucketRoute extends State<BucketRoute> {
         case 'png':
         case 'jpeg':
           return Icon(Icons.image_rounded);
+        case 'pdf':
+          return Icon(Icons.picture_as_pdf_rounded);
+        case 'md':
+          return Icon(Icons.article);
         default:
           return Icon(Icons.text_snippet_rounded);
       }
@@ -182,6 +189,12 @@ class _BucketRoute extends State<BucketRoute> {
           case 'preview':
             this._preview(currentObj.key);
             break;
+          case 'remove':
+            this._remove(currentObj.key);
+            break;
+          case 'share':
+            this._share(currentObj.key);
+            break;
         }
       },
       itemBuilder: (buildContext) {
@@ -231,7 +244,7 @@ class _BucketRoute extends State<BucketRoute> {
                   ),
                 ),
               ]),
-              value: 'delete')
+              value: 'remove')
         ];
         return list;
       },
@@ -243,5 +256,64 @@ class _BucketRoute extends State<BucketRoute> {
       print('$filename $url');
       PreviewNetwork(context: this.context).preview(url);
     });
+  }
+
+  void _remove(filename) {
+    showDialog(
+        context: this.context,
+        builder: (context) {
+          close() {
+            Navigator.of(context).pop(true);
+          }
+
+          return AlertDialog(
+            title: Text('删除'),
+            content: Text('是否删除$filename?'),
+            actions: [
+              FlatButton(
+                onPressed: close,
+                child: Text('取消'),
+              ),
+              FlatButton(
+                onPressed: () {
+                  this.minioController.removeFile(filename).then((_) {
+                    close();
+                    this.getBucketObjects(refresh: true);
+                  });
+                },
+                child: Text('删除'),
+              )
+            ],
+          );
+        });
+  }
+
+  void _share(filename) async {
+    final url = await this.minioController.presignedGetObject(filename);
+    showDialog(
+        context: this.context,
+        builder: (BuildContext context) {
+          return Dialog(
+              child: ShareDialog(
+            url: url,
+            copyLink: (int day, int hours, int minutes) {
+              final expires = day * 60 * 24 + hours * 60 + minutes;
+              this
+                  .minioController
+                  .presignedGetObject(filename, expires: expires)
+                  .then((url) {
+                Clipboard.setData(ClipboardData(text: url));
+                Navigator.of(context).pop();
+                Fluttertoast.showToast(
+                    msg: "复制成功",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.CENTER,
+                    backgroundColor: Colors.blue,
+                    textColor: Colors.white,
+                    fontSize: 16.0);
+              });
+            },
+          ));
+        });
   }
 }

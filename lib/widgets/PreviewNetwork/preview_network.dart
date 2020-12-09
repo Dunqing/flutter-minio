@@ -1,4 +1,5 @@
 import 'package:MinioClient/widgets/loading/index.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 
 class PreviewNetwork {
@@ -19,15 +20,31 @@ class PreviewNetwork {
               alignment: Alignment.center,
               child: Scrollbar(
                   child: SingleChildScrollView(
-                child: Image.network(
+                child: ExtendedImage.network(
                   url,
-                  loadingBuilder: (BuildContext context, Widget child,
-                      ImageChunkEvent event) {
-                    return AnimatedSwitcher(
-                        duration: Duration(milliseconds: 500),
-                        child: event != null
-                            ? child
-                            : Loading(child: LoopBoxLoading()));
+                  cache: true,
+                  mode: ExtendedImageMode.gesture,
+                  loadStateChanged: (ExtendedImageState state) {
+                    switch (state.extendedImageLoadState) {
+                      case LoadState.loading:
+                        return Loading(
+                            child: Loading(
+                          milliseconds: 1000,
+                          child: LoopBoxLoading(),
+                        ));
+                        break;
+                      case LoadState.completed:
+                        return ExtendedRawImage(
+                          image: state.extendedImageInfo?.image,
+                        );
+                        break;
+                      default:
+                        return Loading(
+                            child: Loading(
+                          milliseconds: 1000,
+                          child: LoopBoxLoading(),
+                        ));
+                    }
                   },
                   alignment: Alignment.center,
                   fit: BoxFit.fitWidth,

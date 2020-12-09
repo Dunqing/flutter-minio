@@ -76,13 +76,17 @@ class MinioController {
     return minio.fPutObject(this.bucketName, file.name, file.path);
   }
 
-  Future<String> presignedGetObject(filename, {int expires}) {
+  Future<String> presignedGetObject(String filename, {int expires}) {
     return this
         .minio
         .presignedGetObject(this.bucketName, filename, expires: expires);
   }
 
-  Future<String> getPreviewUrl(filename) {
+  Future<String> getPreviewUrl(String filename) {
     return this.presignedGetObject(filename, expires: 60 * 60 * 24);
+  }
+
+  Future<void> removeFile(String filename) {
+    return this.minio.removeObject(this.bucketName, filename);
   }
 }
