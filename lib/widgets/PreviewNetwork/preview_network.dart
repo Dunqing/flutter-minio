@@ -52,8 +52,8 @@ class PreviewNetwork {
               )),
             ),
             Positioned(
-                right: 20,
-                top: 20,
+                right: 40,
+                bottom: 40,
                 child: GestureDetector(
                     onTap: () {
                       Navigator.of(this.context).pop();
