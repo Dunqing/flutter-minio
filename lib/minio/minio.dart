@@ -89,4 +89,13 @@ class MinioController {
   Future<void> removeFile(String filename) {
     return this.minio.removeObject(this.bucketName, filename);
   }
+
+  Future<void> createBucket(String bucketName) {
+    print(bucketName);
+    return this.minio.makeBucket(bucketName);
+  }
+
+  Future<void> removeBucket(String bucketName) {
+    return this.minio.removeBucket(bucketName);
+  }
 }

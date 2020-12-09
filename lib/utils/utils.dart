@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
 byteToSize(int byte) {
   var size = '';
   if (byte < 0.1 * 1024) {
@@ -32,4 +35,14 @@ byteToSize(int byte) {
         'ZB';
   }
   return size;
+}
+
+toast(String msg) {
+  Fluttertoast.showToast(
+      msg: msg,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.CENTER,
+      backgroundColor: Colors.blue,
+      textColor: Colors.white,
+      fontSize: 16.0);
 }

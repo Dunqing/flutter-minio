@@ -6,7 +6,6 @@ import 'package:MinioClient/widgets/FloatingActionExtendButton/index.dart';
 import 'package:MinioClient/widgets/PreviewNetwork/preview_network.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:minio/models.dart';
 
 class BucketRoute extends StatefulWidget {
@@ -30,12 +29,16 @@ class _BucketRoute extends State<BucketRoute> {
     if (widget != null && widget.bucketName != null) {
       this.getBucketObjects();
     } else {
-      this.minioController.getListBuckets().then((value) {
-        this.setState(() {
-          this.buckets = value.toList();
-        });
-      });
+      this.getBucketList();
     }
+  }
+
+  getBucketList() {
+    this.minioController.getListBuckets().then((value) {
+      this.setState(() {
+        this.buckets = value.toList();
+      });
+    });
   }
 
   getBucketObjects({bool refresh = false}) async {
@@ -65,7 +68,14 @@ class _BucketRoute extends State<BucketRoute> {
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.bucketName ?? 'All Buckets'),
-          actions: [],
+          actions: [
+            IconButton(
+              icon: Icon(Icons.archive),
+              onPressed: () {
+                Navigator.of(context).pushNamed('FileOperationLog');
+              },
+            )
+          ],
         ),
         body: Container(child: this._renderListObjects()),
         floatingActionButton: FloatingActionExtendButton(
@@ -78,22 +88,57 @@ class _BucketRoute extends State<BucketRoute> {
                   child: Icon(Icons.upload_file)),
             FloatingActionExtendChild(
                 label: '创建Bucket',
+                onTap: _createBucket,
                 child: Icon(Icons.create_new_folder_rounded)),
           ],
         ));
   }
 
   Widget _renderBucket(index) {
-    return ListTile(
-      leading: Icon(Icons.folder),
-      title: Text(this.buckets[index].name),
-      trailing: new Icon(Icons.navigate_next, color: Colors.blueGrey),
-      onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) =>
-                BucketRoute(bucketName: this.buckets[index].name)));
-      },
-    );
+    final bucket = this.buckets[index];
+    return GestureDetector(
+        onLongPress: () {
+          showDialog(
+              context: this.context,
+              builder: (context) {
+                close() {
+                  Navigator.of(context).pop();
+                }
+
+                return AlertDialog(
+                  title: Text('删除'),
+                  content: Text('是否删除${bucket.name}? bucket里面的所有文件都会被删除!'),
+                  actions: [
+                    FlatButton(
+                      onPressed: close,
+                      child: Text('取消'),
+                    ),
+                    FlatButton(
+                      onPressed: () {
+                        this
+                            .minioController
+                            .removeBucket(bucket.name)
+                            .then((_) {
+                          close();
+                          this.getBucketList();
+                          toast('删除成功');
+                        });
+                      },
+                      child: Text('删除'),
+                    )
+                  ],
+                );
+              });
+        },
+        child: ListTile(
+          leading: Icon(Icons.folder),
+          title: Text(bucket.name),
+          trailing: new Icon(Icons.navigate_next, color: Colors.blueGrey),
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => BucketRoute(bucketName: bucket.name)));
+          },
+        ));
   }
 
   Widget _renderLeading(obj) {
@@ -278,6 +323,7 @@ class _BucketRoute extends State<BucketRoute> {
                 onPressed: () {
                   this.minioController.removeFile(filename).then((_) {
                     close();
+                    toast('删除成功');
                     this.getBucketObjects(refresh: true);
                   });
                 },
@@ -295,25 +341,69 @@ class _BucketRoute extends State<BucketRoute> {
         builder: (BuildContext context) {
           return Dialog(
               child: ShareDialog(
-            url: url,
-            copyLink: (int day, int hours, int minutes) {
-              final expires = day * 60 * 24 + hours * 60 + minutes;
-              this
-                  .minioController
-                  .presignedGetObject(filename, expires: expires)
-                  .then((url) {
-                Clipboard.setData(ClipboardData(text: url));
-                Navigator.of(context).pop();
-                Fluttertoast.showToast(
-                    msg: "复制成功",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.CENTER,
-                    backgroundColor: Colors.blue,
-                    textColor: Colors.white,
-                    fontSize: 16.0);
-              });
-            },
-          ));
+                  url: url,
+                  copyLink: (int day, int hours, int minutes) {
+                    final expires =
+                        day * 60 * 24 * 60 + hours * 60 * 60 + minutes * 60;
+                    this
+                        .minioController
+                        .presignedGetObject(filename, expires: expires)
+                        .then((url) {
+                      Clipboard.setData(ClipboardData(text: url));
+                      Navigator.of(context).pop();
+                      toast('复制成功');
+                    });
+                  }));
+        });
+  }
+
+  void _createBucket() {
+    showDialog(
+        context: this.context,
+        builder: (context) {
+          close() {
+            Navigator.of(context).pop(true);
+          }
+
+          String bucketName = '';
+          return StatefulBuilder(
+              builder: (BuildContext twoContext, StateSetter setState) {
+            return AlertDialog(
+                title: Title(
+                  color: Color(0xff333333),
+                  child: Text('创建Bucket'),
+                ),
+                content: TextField(
+                  autofocus: true,
+                  textAlign: TextAlign.center,
+                  onChanged: (value) {
+                    print(value);
+                    setState(() {
+                      bucketName = value;
+                    });
+                  },
+                ),
+                actions: [
+                  FlatButton(
+                    onPressed: close,
+                    child: Text('取消'),
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      if (bucketName == '') {
+                        toast('名字不能为空');
+                        return;
+                      }
+                      this.minioController.createBucket(bucketName).then((_) {
+                        toast('创建成功');
+                        close();
+                        this.getBucketList();
+                      });
+                    },
+                    child: Text('创建'),
+                  )
+                ]);
+          });
         });
   }
 }
