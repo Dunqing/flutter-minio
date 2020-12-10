@@ -38,7 +38,6 @@ class _DownloadPageState extends State<DownloadPage> {
           print('data {$builder.data.length}');
           print(builder.data);
           print(ConnectionState.waiting);
-          print(builder.connectionState.index);
           final data = builder.data ?? [];
           if (!builder.hasData) {
             return FlatButton(
@@ -56,7 +55,8 @@ class _DownloadPageState extends State<DownloadPage> {
               itemBuilder: (context, index) {
                 final current = data[index];
                 final progress =
-                    (100 * (current.downloadSize / current.fileSize)).toInt();
+                    (100 * (current.downloadSize ?? 0 / current.fileSize ?? 0))
+                        .toInt();
                 return ListTile(
                   title: Text(current.filename),
                   subtitle: Text('下载总量 ${current.fileSize}'),

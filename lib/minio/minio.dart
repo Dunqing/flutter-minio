@@ -143,7 +143,6 @@ class MinioController {
 
     Future.delayed(Duration.zero).then((_) {
       final listen = dataStream.listen((data) {
-        partFileStream.add(data);
         if (onListen != null) {
           onListen(partFile.statSync().size, stat.size);
         }
