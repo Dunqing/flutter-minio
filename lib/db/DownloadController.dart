@@ -7,6 +7,8 @@ import 'package:sqflite/sqflite.dart';
 
 Database database;
 
+enum DownloadState { PAUSE, DOWNLOAD, COMPLETED }
+
 class DownloadFileInstance {
   final int id;
   final String filename;
@@ -14,6 +16,7 @@ class DownloadFileInstance {
   final int createAt;
   final int updateAt;
   final int fileSize;
+  DownloadState state = DownloadState.DOWNLOAD;
   StreamSubscription<List<int>> subscription;
   int downloadSize;
 
@@ -22,6 +25,10 @@ class DownloadFileInstance {
 
   setSubscription(StreamSubscription<List<int>> sub) {
     this.subscription = sub;
+  }
+
+  changeState(DownloadState state) {
+    this.state = state;
   }
 }
 
@@ -97,7 +104,7 @@ class DownloadController {
 
   Future<DownloadFileInstance> reDownload(DownloadFileInstance instance) async {
     await this._database.rawUpdate(
-        'UPDATE INTO DownloadLog (downloadSize) VALUES(?) WHERE id = ${instance.id}',
+        'UPDATE DownloadLog SET downloadSize = ? WHERE id = ${instance.id}',
         [instance.downloadSize]);
 
     this.downloadStream.add(this.downloadList);
@@ -107,9 +114,12 @@ class DownloadController {
       instance.downloadSize = downloadSize;
       print('downloadSize $downloadSize || $fileSize fileSize');
       this.downloadStream.add(this.downloadList);
+    }, onCompleted: (downloadSize, fileSize) {
+      instance.downloadSize = downloadSize;
+      print('completed downloadSize $downloadSize || $fileSize fileSize');
+      this.downloadStream.add(this.downloadList);
+      instance.changeState(DownloadState.COMPLETED);
     }, onStart: (subscription) {
-      print('subscribtion');
-      print(subscription);
       instance.setSubscription(subscription);
     });
     return instance;

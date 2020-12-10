@@ -55,29 +55,30 @@ class _DownloadPageState extends State<DownloadPage> {
               itemBuilder: (context, index) {
                 final current = data[index];
                 final progress =
-                    (100 * (current.downloadSize ?? 0 / current.fileSize ?? 0))
-                        .toInt();
+                    (100 * (current.downloadSize / current.fileSize)).toInt();
                 return ListTile(
                   title: Text(current.filename),
-                  subtitle: Text('下载总量 ${current.fileSize}'),
-                  trailing: progress == 100
+                  subtitle: Text('下载大小 ${current.fileSize}'),
+                  trailing: current.state == DownloadState.COMPLETED
                       ? Text('下载完成')
                       : FlatButton.icon(
                           label: Text('下载中 $progress%'),
-                          icon: current.subscription?.isPaused == true
+                          icon: current.state == DownloadState.PAUSE
                               ? Icon(Icons.play_arrow)
                               : Icon(Icons.stop),
                           onPressed: () {
                             if (current.subscription != null) {
-                              if (current.subscription?.isPaused == true) {
+                              if (current.state == DownloadState.PAUSE) {
                                 this.downloadController.reDownload(current);
+                                current.changeState(DownloadState.DOWNLOAD);
                                 _refresh();
                                 toast('继续下载');
-                              } else if (current.subscription?.isPaused ==
-                                  false) {
-                                current.subscription?.cancel();
-                                _refresh();
+                              } else if (current.state ==
+                                  DownloadState.DOWNLOAD) {
+                                current.changeState(DownloadState.PAUSE);
+                                current.subscription.cancel();
                                 toast('暂停成功');
+                                _refresh();
                               }
                             }
                           },

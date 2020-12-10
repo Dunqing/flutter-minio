@@ -108,6 +108,7 @@ class MinioController {
 
   Future<dynamic> getPartialObject(String bucketName, String filename,
       {onListen(int downloadSize, int fileSize),
+      onCompleted(int downloadSize, int fileSize),
       onStart(StreamSubscription<List<int>> subscription)}) async {
     print('getPartialObject $filename');
     var path = await getExternalStorageDirectory();
@@ -157,8 +158,9 @@ class MinioController {
 
     await dataStream.pipe(partFileStream);
 
-    print(
-        'completd downloadSize ${partFile.statSync().size} MaxSize ${stat.size}');
+    if (onCompleted != null) {
+      onCompleted(partFile.statSync().size, stat.size);
+    }
     // print('${partFile.statSync().size}, ${stat.size}');
 
     final localStat = await partFile.stat();
