@@ -95,6 +95,26 @@ class DownloadController {
     return id;
   }
 
+  Future<DownloadFileInstance> reDownload(DownloadFileInstance instance) async {
+    await this._database.rawUpdate(
+        'UPDATE INTO DownloadLog (downloadSize) VALUES(?) WHERE id = ${instance.id}',
+        [instance.downloadSize]);
+
+    this.downloadStream.add(this.downloadList);
+
+    this.minio.getPartialObject(instance.bucketName, instance.filename,
+        onListen: (downloadSize, fileSize) {
+      instance.downloadSize = downloadSize;
+      print('downloadSize $downloadSize || $fileSize fileSize');
+      this.downloadStream.add(this.downloadList);
+    }, onStart: (subscription) {
+      print('subscribtion');
+      print(subscription);
+      instance.setSubscription(subscription);
+    });
+    return instance;
+  }
+
   Future<List<Map<String, dynamic>>> finaAll() async {
     final result = await this._database.rawQuery('SELECT * FROM "DownloadLog"');
     return result;

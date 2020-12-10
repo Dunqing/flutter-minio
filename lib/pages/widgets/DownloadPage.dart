@@ -70,12 +70,12 @@ class _DownloadPageState extends State<DownloadPage> {
                           onPressed: () {
                             if (current.subscription != null) {
                               if (current.subscription?.isPaused == true) {
-                                current.subscription?.resume();
+                                this.downloadController.reDownload(current);
                                 _refresh();
                                 toast('继续下载');
                               } else if (current.subscription?.isPaused ==
                                   false) {
-                                current.subscription?.pause();
+                                current.subscription?.cancel();
                                 _refresh();
                                 toast('暂停成功');
                               }
