@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:MinioClient/utils/utils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:minio/io.dart';
 import 'package:minio/minio.dart';
@@ -165,7 +166,7 @@ class MinioController {
     if (localStat.size != stat.size) {
       throw MinioError('Size mismatch between downloaded file and the object');
     }
-
+    toast('下载完成 $filename');
     return rename();
   }
 }
