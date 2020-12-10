@@ -28,7 +28,8 @@ class _BucketRoute extends State<BucketRoute> {
   initState() {
     super.initState();
     this.minioController = MinioController(widget.bucketName, widget.prefix);
-    this.downloadController = DownloadController();
+    this.downloadController =
+        createDownloadInstance(minio: this.minioController);
     if (widget != null && widget.bucketName != null) {
       this.getBucketObjects();
     } else {
@@ -412,7 +413,10 @@ class _BucketRoute extends State<BucketRoute> {
 
   void _download(Object obj) {
     final now = DateTime.now().millisecond;
-    this.downloadController.insert(obj.key, obj.size, now, now, 0).then((res) {
+    this
+        .downloadController
+        .insert(widget.bucketName, obj.key, now, now, obj.size, 0)
+        .then((res) {
       print(res);
     });
     // this.minioController.downloadFile(filename.key);

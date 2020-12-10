@@ -1,8 +1,14 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:minio/io.dart';
 import 'package:minio/minio.dart';
 import 'package:minio/models.dart';
+import 'package:path/path.dart' show dirname;
 import 'package:path_provider/path_provider.dart';
+// ignore: unused_import
+import 'package:rxdart/rxdart.dart';
 
 class Prefix {
   bool isPrefix;
@@ -97,5 +103,69 @@ class MinioController {
 
   Future<void> removeBucket(String bucketName) {
     return this.minio.removeBucket(bucketName);
+  }
+
+  Future<dynamic> getPartialObject(String bucketName, String filename,
+      {onListen(int downloadSize, int fileSize),
+      onStart(StreamSubscription<List<int>> subscription)}) async {
+    print('getPartialObject $filename');
+    var path = await getExternalStorageDirectory();
+    final filePath = '${path.path}/${prefix + filename}';
+    final stat = await this.minio.statObject(bucketName, filename);
+
+    final dir = dirname(filePath);
+    await Directory(dir).create(recursive: true);
+
+    final partFileName = '$filePath.${stat.etag}.part.minio';
+    final partFile = File(partFileName);
+    IOSink partFileStream;
+    var offset = 0;
+
+    final rename = () => partFile.rename(filePath);
+
+    if (await partFile.exists()) {
+      final localStat = await partFile.stat();
+      if (stat.size == localStat.size) return rename();
+      offset = localStat.size;
+      partFileStream = partFile.openWrite(mode: FileMode.append);
+    } else {
+      partFileStream = partFile.openWrite(mode: FileMode.write);
+    }
+
+    final dataStream =
+        (await this.minio.getPartialObject(bucketName, filename, offset))
+            .asBroadcastStream(onListen: (sub) {
+      if (onStart != null) {
+        onStart(sub);
+      }
+    });
+
+    Future.delayed(Duration.zero).then((_) {
+      final listen = dataStream.listen((data) {
+        partFileStream.add(data);
+        if (onListen != null) {
+          onListen(partFile.statSync().size, stat.size);
+        }
+      });
+      listen.onDone(() {
+        if (onListen != null) {
+          onListen(partFile.statSync().size, stat.size);
+        }
+        listen.cancel();
+      });
+    });
+
+    await dataStream.pipe(partFileStream);
+
+    print(
+        'completd downloadSize ${partFile.statSync().size} MaxSize ${stat.size}');
+    // print('${partFile.statSync().size}, ${stat.size}');
+
+    final localStat = await partFile.stat();
+    if (localStat.size != stat.size) {
+      throw MinioError('Size mismatch between downloaded file and the object');
+    }
+
+    return rename();
   }
 }
