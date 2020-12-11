@@ -26,7 +26,7 @@ class MinioController {
   String bucketName;
   String prefix;
 
-  MinioController(this.bucketName, this.prefix) {
+  MinioController({this.bucketName, this.prefix}) {
     if (minio is Minio) {
       this.minio = minio;
     } else {
@@ -107,9 +107,9 @@ class MinioController {
   }
 
   Future<dynamic> getPartialObject(String bucketName, String filename,
-      {onListen(int downloadSize, int fileSize),
-      onCompleted(int downloadSize, int fileSize),
-      onStart(StreamSubscription<List<int>> subscription)}) async {
+      {void onListen(int downloadSize, int fileSize),
+      void onCompleted(int downloadSize, int fileSize),
+      void onStart(StreamSubscription<List<int>> subscription)}) async {
     print('getPartialObject $filename');
     var path = await getExternalStorageDirectory();
     final filePath = '${path.path}/${prefix + filename}';

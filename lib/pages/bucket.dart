@@ -1,4 +1,4 @@
-import 'package:MinioClient/db/DownloadController.dart';
+import 'package:MinioClient/minio/DownloadController.dart';
 import 'package:MinioClient/minio/minio.dart';
 import 'package:MinioClient/pages/widgets/ShareDialog.dart';
 import 'package:MinioClient/utils/time.dart';
@@ -27,7 +27,8 @@ class _BucketRoute extends State<BucketRoute> {
 
   initState() {
     super.initState();
-    this.minioController = MinioController(widget.bucketName, widget.prefix);
+    this.minioController =
+        MinioController(bucketName: widget.bucketName, prefix: widget.prefix);
     this.downloadController =
         createDownloadInstance(minio: this.minioController);
     if (widget != null && widget.bucketName != null) {
