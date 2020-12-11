@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:MinioClient/minio/minio.dart';
+import 'package:MinioClient/utils/utils.dart';
 // ignore: unused_import
 import 'package:rxdart/rxdart.dart';
 import 'package:sqflite/sqflite.dart';
@@ -16,14 +17,24 @@ class DownloadFileInstance {
   final int createAt;
   final int updateAt;
   final int fileSize;
+  final String filePath;
   String stateText;
   DownloadState state = DownloadState.DOWNLOAD;
   StreamSubscription<List<int>> subscription;
   int downloadSize;
 
-  DownloadFileInstance(this.id, this.bucketName, this.filename, this.createAt,
-      this.updateAt, this.fileSize, this.downloadSize,
-      {this.state, this.stateText = ''});
+  DownloadFileInstance(
+    this.id,
+    this.bucketName,
+    this.filename,
+    this.createAt,
+    this.updateAt,
+    this.fileSize,
+    this.downloadSize, {
+    this.state,
+    this.stateText = '',
+    this.filePath,
+  });
 
   setSubscription(StreamSubscription<List<int>> sub) {
     this.subscription = sub;
@@ -172,19 +183,24 @@ class DownloadController {
   List<DownloadFileInstance> downloadList = [];
   DownloadScheduler scheduler;
   MinioController minio;
+  String dirPath;
 
   DownloadController({this.minio}) {
     if (database != null) {
       this._database = database;
       return;
     }
+    // 设置下载路径
+    getDictionaryPath().then((dir) {
+      this.dirPath = dir;
+    });
     getDatabasesPath().then((path) async {
       final dbPath = path + '/minio.db';
       await deleteDatabase(dbPath);
       this._database = await openDatabase(dbPath, version: 1,
           onCreate: (Database db, int version) {
         db.execute(
-            'CREATE TABLE DownloadLog (id INTEGER PRIMARY KEY, bucketName TEXT, filename TEXT, createAt TEXT, updateAt TEXT, fileSize INTEGER, downloadSize INTEGER, state INTEGER, stateText TEXT)');
+            'CREATE TABLE DownloadLog (id INTEGER PRIMARY KEY, bucketName TEXT, filename TEXT, createAt TEXT, updateAt TEXT, fileSize INTEGER, downloadSize INTEGER, state INTEGER, stateText TEXT, filePath TEXT)');
       });
       // this._database.execute('DROP TABLE DownloadLog');
       database = this._database;
@@ -212,6 +228,8 @@ class DownloadController {
           data['fileSize'],
           data['downloadSize'],
           state: stateValues[data['state']],
+          stateText: data['Text'],
+          filePath: data['filePath'],
         );
         list.add(instance);
         if (instance.state == DownloadState.DOWNLOAD ||
@@ -227,8 +245,9 @@ class DownloadController {
   // 插入一条下载数据
   Future<int> insert(
       bucketName, filename, createAt, updateAt, fileSize, downloadSize) async {
+    final filePath = '${this.dirPath}/$filename';
     final id = await this._database.rawInsert(
-        'INSERT INTO DownloadLog (bucketName, filename, createAt, updateAt, fileSize, downloadSize, state, stateText) VALUES(?, ?, ?, ?, ?, ?, ?, "")',
+        'INSERT INTO DownloadLog (bucketName, filename, createAt, updateAt, fileSize, downloadSize, state, stateText, filePath) VALUES(?, ?, ?, ?, ?, ?, ?, "", ?)',
         [
           bucketName,
           filename,
@@ -236,12 +255,13 @@ class DownloadController {
           updateAt,
           fileSize,
           downloadSize,
-          DownloadState.DOWNLOAD.index
+          DownloadState.DOWNLOAD.index,
+          filePath
         ]);
 
     final instance = DownloadFileInstance(
         id, bucketName, filename, createAt, updateAt, fileSize, downloadSize,
-        state: DownloadState.STOP);
+        state: DownloadState.STOP, filePath: filePath);
 
     this.downloadList.insert(0, instance);
     this.scheduler.add(instance);

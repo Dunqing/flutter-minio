@@ -59,6 +59,7 @@ class _DownloadPageState extends State<DownloadPage> {
   _renderSubtitle(DownloadFileInstance current) {
     String text;
 
+    TextStyle textStyle = null;
     switch (current.state) {
       case DownloadState.DOWNLOAD:
         text =
@@ -69,6 +70,7 @@ class _DownloadPageState extends State<DownloadPage> {
         break;
       case DownloadState.ERROR:
         text = 'Error: ${current.stateText}';
+        textStyle = TextStyle(color: Colors.red);
         break;
       case DownloadState.PAUSE:
         text = '正在等待下载，可单击插队';
@@ -77,7 +79,10 @@ class _DownloadPageState extends State<DownloadPage> {
         text = '已停止下载，需重新下载请单击';
         break;
     }
-    return Text(text);
+    return Text(
+      text,
+      style: textStyle,
+    );
   }
 
   _renderTrailing(DownloadFileInstance current) {
@@ -105,10 +110,12 @@ class _DownloadPageState extends State<DownloadPage> {
       case DownloadState.COMPLETED:
         return FlatButton.icon(
             label: Text('预览'),
-            icon: Icon(Icons.play_circle_outline),
+            icon: Icon(Icons.preview_outlined),
             onPressed: () {
-              this.downloadController.advanceDownload(current);
-              toast('继续下载');
+              print(current.filePath);
+              permissionStorage().then((res) {
+                launchURL('content://${current.filePath}');
+              });
             });
         break;
       case DownloadState.PAUSE:

@@ -413,10 +413,7 @@ class _BucketRoute extends State<BucketRoute> {
     final now = DateTime.now().millisecond;
     this
         .downloadController
-        .insert(widget.bucketName, obj.key, now, now, obj.size, 0)
-        .then((res) {
-      print(res);
-    });
+        .insert(widget.bucketName, obj.key, now, now, obj.size, 0);
     // this.minioController.downloadFile(filename.key);
   }
 }

@@ -107,13 +107,18 @@ class MinioController {
   }
 
   Future<dynamic> getPartialObject(String bucketName, String filename,
-      {void onListen(int downloadSize, int fileSize),
+      {String filePath,
+      void onListen(int downloadSize, int fileSize),
       void onCompleted(int downloadSize, int fileSize),
       void onStart(StreamSubscription<List<int>> subscription)}) async {
     print('getPartialObject $filename');
-    var path = await getExternalStorageDirectory();
-    final filePath = '${path.path}/${prefix + filename}';
+
     final stat = await this.minio.statObject(bucketName, filename);
+
+    // 如果没设置文件路径则默认获取
+    if (filePath == null) {
+      filePath = await getDictionaryPath(filename: filename);
+    }
 
     final dir = dirname(filePath);
     await Directory(dir).create(recursive: true);
