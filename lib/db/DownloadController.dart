@@ -7,7 +7,7 @@ import 'package:sqflite/sqflite.dart';
 
 Database database;
 
-enum DownloadState { PAUSE, DOWNLOAD, COMPLETED }
+enum DownloadState { PAUSE, DOWNLOAD, COMPLETED, STOP }
 
 class DownloadFileInstance {
   final int id;
@@ -21,7 +21,8 @@ class DownloadFileInstance {
   int downloadSize;
 
   DownloadFileInstance(this.id, this.bucketName, this.filename, this.createAt,
-      this.updateAt, this.fileSize, this.downloadSize);
+      this.updateAt, this.fileSize, this.downloadSize,
+      {this.state});
 
   setSubscription(StreamSubscription<List<int>> sub) {
     this.subscription = sub;
@@ -47,11 +48,11 @@ class DownloadController {
     }
     getDatabasesPath().then((path) async {
       final dbPath = path + '/minio.db';
-      await deleteDatabase(dbPath);
+      // await deleteDatabase(dbPath);
       this._database = await openDatabase(dbPath, version: 1,
           onCreate: (Database db, int version) {
         db.execute(
-            'CREATE TABLE DownloadLog (id INTEGER PRIMARY KEY, bucketName TEXT, filename TEXT, createAt TEXT, updateAt TEXT, fileSize INTEGER, downloadSize INTEGER)');
+            'CREATE TABLE DownloadLog (id INTEGER PRIMARY KEY, bucketName TEXT, filename TEXT, createAt TEXT, updateAt TEXT, fileSize INTEGER, downloadSize INTEGER, state INTEGER)');
       });
       // this._database.execute('DROP TABLE DownloadLog');
       database = this._database;
@@ -61,16 +62,19 @@ class DownloadController {
 
   initData() {
     this.finaAll().then((res) {
+      final stateValues = DownloadState.values;
       final List<DownloadFileInstance> list = [];
       res.forEach((data) {
         list.add(DownloadFileInstance(
-            data['id'],
-            data['bucketName'],
-            data['filename'],
-            int.parse(data['createAt']),
-            int.parse(data['updateAt']),
-            data['maxSize'],
-            data['downloadSize']));
+          data['id'],
+          data['bucketName'],
+          data['filename'],
+          int.parse(data['createAt']),
+          int.parse(data['updateAt']),
+          data['fileSize'],
+          data['downloadSize'],
+          state: stateValues[data['state']],
+        ));
       });
       this.downloadList = list.reversed.toList();
       this.downloadStream.add(list);
@@ -80,48 +84,69 @@ class DownloadController {
   Future<int> insert(
       bucketName, filename, createAt, updateAt, fileSize, downloadSize) async {
     final id = await this._database.rawInsert(
-        'INSERT INTO DownloadLog (bucketName, filename, createAt, updateAt, fileSize, downloadSize) VALUES(?, ?, ?, ?, ?, ?)',
-        [bucketName, filename, createAt, updateAt, fileSize, downloadSize]);
+        'INSERT INTO DownloadLog (bucketName, filename, createAt, updateAt, fileSize, downloadSize, state) VALUES(?, ?, ?, ?, ?, ?, ?)',
+        [
+          bucketName,
+          filename,
+          createAt,
+          updateAt,
+          fileSize,
+          downloadSize,
+          DownloadState.DOWNLOAD.index
+        ]);
 
     final instance = DownloadFileInstance(
-        id, bucketName, filename, createAt, updateAt, fileSize, downloadSize);
+        id, bucketName, filename, createAt, updateAt, fileSize, downloadSize,
+        state: DownloadState.DOWNLOAD);
 
     this.downloadList.insert(0, instance);
     this.downloadStream.add(this.downloadList);
+    this.dispatchDownload(instance);
 
-    this.minio.getPartialObject(bucketName, filename,
-        onListen: (downloadSize, fileSize) {
-      instance.downloadSize = downloadSize;
-      print('downloadSize $downloadSize || $fileSize fileSize');
-      this.downloadStream.add(this.downloadList);
-    }, onStart: (subscription) {
-      print('subscribtion');
-      print(subscription);
-      instance.setSubscription(subscription);
-    });
     return id;
   }
 
-  Future<DownloadFileInstance> reDownload(DownloadFileInstance instance) async {
+  updateDownloadSize(DownloadFileInstance instance, int downloadSize) async {
+    instance.downloadSize = downloadSize;
     await this._database.rawUpdate(
         'UPDATE DownloadLog SET downloadSize = ? WHERE id = ${instance.id}',
         [instance.downloadSize]);
-
     this.downloadStream.add(this.downloadList);
+  }
 
-    this.minio.getPartialObject(instance.bucketName, instance.filename,
-        onListen: (downloadSize, fileSize) {
+  updateDownloadState(
+      DownloadFileInstance instance, DownloadState state) async {
+    instance.changeState(DownloadState.COMPLETED);
+    await this._database.rawUpdate(
+        'UPDATE DownloadLog SET state = ? WHERE id = ${instance.id}', [state]);
+    this.downloadStream.add(this.downloadList);
+  }
+
+  Future<void> dispatchDownload(DownloadFileInstance instance) {
+    _onListen(downloadSize, fileSize) {
+      print('currentSize $downloadSize || fileSize $fileSize');
       instance.downloadSize = downloadSize;
-      print('downloadSize $downloadSize || $fileSize fileSize');
-      this.downloadStream.add(this.downloadList);
-    }, onCompleted: (downloadSize, fileSize) {
-      instance.downloadSize = downloadSize;
-      print('completed downloadSize $downloadSize || $fileSize fileSize');
-      this.downloadStream.add(this.downloadList);
-      instance.changeState(DownloadState.COMPLETED);
-    }, onStart: (subscription) {
+      this.updateDownloadSize(instance, instance.downloadSize);
+    }
+
+    _onCompleted(downloadSize, fileSize) {
+      print('completed currentSize $downloadSize || fileSize $fileSize');
+      this.updateDownloadSize(instance, instance.downloadSize);
+      this.updateDownloadState(instance, DownloadState.COMPLETED);
+    }
+
+    _onStart(subscription) {
       instance.setSubscription(subscription);
-    });
+    }
+
+    return this.minio.getPartialObject(instance.bucketName, instance.filename,
+        onListen: _onListen, onCompleted: _onCompleted, onStart: _onStart);
+  }
+
+  Future<DownloadFileInstance> reDownload(DownloadFileInstance instance) async {
+    this.downloadStream.add(this.downloadList);
+    this.updateDownloadSize(instance, instance.downloadSize);
+    this.dispatchDownload(instance);
     return instance;
   }
 
@@ -131,6 +156,7 @@ class DownloadController {
   }
 }
 
+/// 创建单例downloadController
 final createDownloadInstance = () {
   DownloadController instance;
   return ({MinioController minio}) {

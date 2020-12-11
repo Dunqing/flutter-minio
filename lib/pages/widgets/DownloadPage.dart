@@ -25,19 +25,15 @@ class _DownloadPageState extends State<DownloadPage> {
     super.initState();
   }
 
+  _changeDownloadState(DownloadFileInstance instance, DownloadState state) {
+    this.downloadController.updateDownloadState(instance, state);
+  }
+
   @override
   Widget build(BuildContext context) {
-    print('stream');
     return StreamBuilder(
         stream: this._stream,
         builder: (context, AsyncSnapshot<List<DownloadFileInstance>> builder) {
-          _refresh() {
-            this._stream.add(builder.data);
-          }
-
-          print('data {$builder.data.length}');
-          print(builder.data);
-          print(ConnectionState.waiting);
           final data = builder.data ?? [];
           if (!builder.hasData) {
             return FlatButton(
@@ -54,39 +50,56 @@ class _DownloadPageState extends State<DownloadPage> {
               itemCount: data.length,
               itemBuilder: (context, index) {
                 final current = data[index];
-                final progress =
-                    (100 * (current.downloadSize / current.fileSize)).toInt();
+
                 return ListTile(
-                  title: Text(current.filename),
-                  subtitle: Text('下载大小 ${current.fileSize}'),
-                  trailing: current.state == DownloadState.COMPLETED
-                      ? Text('下载完成')
-                      : FlatButton.icon(
-                          label: Text('下载中 $progress%'),
-                          icon: current.state == DownloadState.PAUSE
-                              ? Icon(Icons.play_arrow)
-                              : Icon(Icons.stop),
-                          onPressed: () {
-                            if (current.subscription != null) {
-                              if (current.state == DownloadState.PAUSE) {
-                                this.downloadController.reDownload(current);
-                                current.changeState(DownloadState.DOWNLOAD);
-                                _refresh();
-                                toast('继续下载');
-                              } else if (current.state ==
-                                  DownloadState.DOWNLOAD) {
-                                current.changeState(DownloadState.PAUSE);
-                                current.subscription.cancel();
-                                toast('暂停成功');
-                                _refresh();
-                              }
-                            }
-                          },
-                        ),
-                );
+                    title: Text(current.filename),
+                    subtitle: Text('下载大小 ${current.fileSize}'),
+                    trailing: _renderTrailing(current));
               },
             ),
           );
         });
+  }
+
+  _renderTrailing(DownloadFileInstance current) {
+    final progress = (100 * (current.downloadSize / current.fileSize)).toInt();
+    switch (current.state) {
+      case DownloadState.DOWNLOAD:
+        return FlatButton.icon(
+          label: Text('下载中 $progress%'),
+          icon: Icon(Icons.stop_circle),
+          onPressed: () {
+            toast('暂停成功');
+            current.subscription.cancel();
+            this._changeDownloadState(current, DownloadState.STOP);
+          },
+        );
+        break;
+      case DownloadState.STOP:
+        return FlatButton.icon(
+            label: Text('已暂停 $progress'),
+            icon: Icon(Icons.play_circle_outline),
+            onPressed: () {
+              this.downloadController.reDownload(current);
+              this._changeDownloadState(current, DownloadState.DOWNLOAD);
+              toast('继续下载');
+            });
+        break;
+      case DownloadState.COMPLETED:
+        return Text('下载完成');
+        break;
+      case DownloadState.PAUSE:
+        return FlatButton.icon(
+            label: Text('等待下载 $progress'),
+            icon: Icon(Icons.play_circle_outline),
+            onPressed: () {
+              this.downloadController.reDownload(current);
+              current.changeState(DownloadState.DOWNLOAD);
+              this._changeDownloadState(current, DownloadState.DOWNLOAD);
+              toast('继续下载');
+            });
+      default:
+        Text('下载错误，请重新下载');
+    }
   }
 }

@@ -54,7 +54,6 @@ class _BucketRoute extends State<BucketRoute> {
         this.bucketObjects.clear();
       }
       setState(() {
-        print(res['prefixes']);
         this.bucketObjects.addAll(res['prefixes']);
         this.bucketObjects.addAll(res['objests']);
       });
@@ -230,7 +229,6 @@ class _BucketRoute extends State<BucketRoute> {
   _renderMoreMenu(currentObj) {
     return PopupMenuButton(
       onSelected: (value) async {
-        print('value $value');
         switch (value) {
           case 'download':
             this._download(currentObj);
@@ -381,7 +379,6 @@ class _BucketRoute extends State<BucketRoute> {
                   autofocus: true,
                   textAlign: TextAlign.center,
                   onChanged: (value) {
-                    print(value);
                     setState(() {
                       bucketName = value;
                     });
