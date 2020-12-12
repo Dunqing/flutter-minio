@@ -89,7 +89,7 @@ class DownloadScheduler {
     this.currentDownloadList.remove(removeInstance);
     removeInstance.changeState(DownloadState.PAUSE);
     removeInstance.subscription.cancel();
-    // 只是暂停 加入的等待队列
+    // 只是暂停 加入到等待队列
     this.waitingDownloadList.add(removeInstance);
   }
 
@@ -120,6 +120,7 @@ class DownloadScheduler {
   notify(DownloadFileInstance instance) {
     this.removeDownload(instance);
 
+    print('当前还有几个要下载的 ${this.waitingDownloadList.length}');
     // 如果等待下载的已下完则结束运行
     if (this.waitingDownloadList.length == 0) {
       return;
@@ -173,6 +174,7 @@ class DownloadScheduler {
       this.pauseDownload(0);
     }
 
+    this.waitingDownloadList.remove(instance);
     this.scheduler.add(instance);
   }
 }
