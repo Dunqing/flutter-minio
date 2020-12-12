@@ -303,6 +303,13 @@ packages:
       url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub"
     source: hosted
     version: "0.25.0"
+  share:
+    dependency: "direct main"
+    description:
+      name: share
+      url: "https://mirrors.tuna.tsinghua.edu.cn/dart-pub"
+    source: hosted
+    version: "0.6.5+4"
   sky_engine:
     dependency: transitive
     description: flutter

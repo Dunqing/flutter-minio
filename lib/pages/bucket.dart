@@ -8,6 +8,7 @@ import 'package:MinioClient/widgets/PreviewNetwork/preview_network.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:minio/models.dart';
+import 'package:share/share.dart';
 
 class BucketRoute extends StatefulWidget {
   BucketRoute({Key key, this.bucketName, this.prefix = ''}) : super(key: key);
@@ -355,6 +356,17 @@ class _BucketRoute extends State<BucketRoute> {
                       Clipboard.setData(ClipboardData(text: url));
                       Navigator.of(context).pop();
                       toast('复制成功');
+                    });
+                  },
+                  shareLink: (int day, int hours, int minutes) {
+                    final expires =
+                        day * 60 * 24 * 60 + hours * 60 * 60 + minutes * 60;
+                    this
+                        .minioController
+                        .presignedGetObject(filename, expires: expires)
+                        .then((url) {
+                      Share.share('Click $url download',
+                          subject: 'Share you $filename');
                     });
                   }));
         });

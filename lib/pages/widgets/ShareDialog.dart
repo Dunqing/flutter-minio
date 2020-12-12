@@ -7,7 +7,9 @@ typedef CopyLinkCallback = void Function(int day, int hours, int minutes);
 class ShareDialog extends StatefulWidget {
   final String url;
   final CopyLinkCallback copyLink;
-  ShareDialog({Key key, @required this.url, @required this.copyLink})
+  final CopyLinkCallback shareLink;
+  ShareDialog(
+      {Key key, @required this.url, @required this.copyLink, this.shareLink})
       : super(key: key);
 
   @override
@@ -92,12 +94,30 @@ class _ShareDialogState extends State<ShareDialog> {
             ),
             Padding(
               padding: EdgeInsets.only(top: 30),
-              child: Text(
-                '分享链接',
-                style: TextStyle(
-                    color: const Color(0xFF8e8e8e),
-                    fontSize: 14,
-                    decoration: TextDecoration.none),
+              child: Row(
+                children: [
+                  Text(
+                    '分享链接',
+                    style: TextStyle(
+                        color: const Color(0xFF8e8e8e),
+                        fontSize: 14,
+                        decoration: TextDecoration.none),
+                  ),
+                  GestureDetector(
+                      onTap: () {
+                        widget.copyLink(this.day, this.hours, this.minutes);
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 8),
+                        child: Text(
+                          '点击复制链接',
+                          style: TextStyle(
+                              color: Colors.blue,
+                              fontSize: 12,
+                              decoration: TextDecoration.none),
+                        ),
+                      )),
+                ],
               ),
             ),
             Padding(
@@ -303,11 +323,11 @@ class _ShareDialogState extends State<ShareDialog> {
                 children: [
                   RaisedButton(
                     onPressed: () {
-                      widget.copyLink(this.day, this.hours, this.minutes);
+                      widget.shareLink(this.day, this.hours, this.minutes);
                     },
                     color: Color(0xff33d46f),
                     child: Text(
-                      '复制链接',
+                      '分享',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
