@@ -56,7 +56,10 @@ class _BucketRoute extends State<BucketRoute> {
 
   _uploadFile() {
     this.minioController.uploadFile().then((string) {
+      toast('上传成功');
       this.getBucketObjects(refresh: true);
+    }).catchError((err) {
+      toastError(err?.message ?? err.toString());
     });
   }
 
