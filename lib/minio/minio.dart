@@ -57,8 +57,9 @@ class MinioController {
 
   Future<Map<dynamic, dynamic>> getBucketObjects(
       String bucketName, String prefix) async {
-    final objects = minio.listObjectsV2(this.bucketName,
-        prefix: this.prefix, recursive: false);
+    final objects = this
+        .minio
+        .listObjectsV2(this.bucketName, prefix: this.prefix, recursive: false);
     final map = new Map();
     await for (var obj in objects) {
       final prefixs = obj.prefixes.map((e) {

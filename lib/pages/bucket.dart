@@ -9,7 +9,6 @@ import 'package:MinioClient/widgets/FloatingActionExtendButton/index.dart';
 import 'package:MinioClient/widgets/PreviewNetwork/preview_network.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:minio/minio.dart';
 import 'package:minio/models.dart';
 import 'package:share/share.dart';
 
@@ -24,7 +23,6 @@ class BucketRoute extends StatefulWidget {
 }
 
 class _BucketRoute extends State<BucketRoute> {
-  List<Bucket> buckets = [];
   List<dynamic> bucketObjects = [];
   MinioController minioController;
   DownloadController downloadController;
@@ -41,11 +39,7 @@ class _BucketRoute extends State<BucketRoute> {
     this.downloadController =
         createDownloadInstance(minio: this.minioController);
     this.listenDownloadCount();
-    if (widget != null && widget.bucketName != null) {
-      this.getBucketObjects();
-    } else {
-      this.getBucketList();
-    }
+    this.getBucketObjects();
   }
 
   listenDownloadCount() {
@@ -75,14 +69,6 @@ class _BucketRoute extends State<BucketRoute> {
   dispose() {
     this._listenCount.cancel();
     super.dispose();
-  }
-
-  getBucketList() {
-    this.minioController.getListBuckets().then((value) {
-      this.setState(() {
-        this.buckets = value.toList();
-      });
-    });
   }
 
   getBucketObjects({bool refresh = false}) async {
@@ -122,58 +108,7 @@ class _BucketRoute extends State<BucketRoute> {
                   onTap: _uploadFile,
                   label: '上传文件',
                   child: Icon(Icons.upload_file)),
-            FloatingActionExtendChild(
-                label: '创建Bucket',
-                onTap: _createBucket,
-                child: Icon(Icons.create_new_folder_rounded)),
           ],
-        ));
-  }
-
-  Widget _renderBucket(index) {
-    final bucket = this.buckets[index];
-    return GestureDetector(
-        onLongPress: () {
-          showDialog(
-              context: this.context,
-              builder: (context) {
-                close() {
-                  Navigator.of(context).pop();
-                }
-
-                return AlertDialog(
-                  title: Text('删除'),
-                  content: Text('是否删除${bucket.name}? bucket里面的所有文件都会被删除!'),
-                  actions: [
-                    FlatButton(
-                      onPressed: close,
-                      child: Text('取消'),
-                    ),
-                    FlatButton(
-                      onPressed: () {
-                        this
-                            .minioController
-                            .removeBucket(bucket.name)
-                            .then((_) {
-                          close();
-                          this.getBucketList();
-                          toast('删除成功');
-                        });
-                      },
-                      child: Text('删除'),
-                    )
-                  ],
-                );
-              });
-        },
-        child: ListTile(
-          leading: Icon(Icons.folder),
-          title: Text(bucket.name),
-          trailing: new Icon(Icons.navigate_next, color: Colors.blueGrey),
-          onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => BucketRoute(bucketName: bucket.name)));
-          },
         ));
   }
 
@@ -213,47 +148,41 @@ class _BucketRoute extends State<BucketRoute> {
 
   Widget _renderListObjects() {
     return ListView.builder(
-      itemCount: widget.bucketName != null
-          ? this.bucketObjects.length
-          : this.buckets.length,
+      itemCount: this.bucketObjects.length,
       itemBuilder: (context, index) {
         var element;
-        if (widget.bucketName != null) {
-          final currentObj = this.bucketObjects[index];
-          // 是否为路径
-          final isPrefix = currentObj is Prefix;
-          element = ListTile(
-            leading: _renderLeading(currentObj),
-            title: Text(currentObj.key.replaceAll(widget.prefix, '')),
-            subtitle: isPrefix
-                ? null
-                : Row(
-                    children: [
-                      Text(formatTime(
-                          'yyyy/MM/dd/ HH:mm', currentObj.lastModified)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4.0),
-                        child: Text('-'),
-                      ),
-                      Text(byteToSize(currentObj.size))
-                    ],
-                  ),
-            trailing: isPrefix
-                ? IconButton(icon: Icon(Icons.navigate_next), onPressed: null)
-                : _renderMoreMenu(currentObj),
-            onTap: () async {
-              if (isPrefix) {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => BucketRoute(
-                          bucketName: widget.bucketName,
-                          prefix: currentObj.prefix,
-                        )));
-              }
-            },
-          );
-        } else {
-          element = this._renderBucket(index);
-        }
+        final currentObj = this.bucketObjects[index];
+        // 是否为路径
+        final isPrefix = currentObj is Prefix;
+        element = ListTile(
+          leading: _renderLeading(currentObj),
+          title: Text(currentObj.key.replaceAll(widget.prefix, '')),
+          subtitle: isPrefix
+              ? null
+              : Row(
+                  children: [
+                    Text(formatTime(
+                        'yyyy/MM/dd/ HH:mm', currentObj.lastModified)),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4.0),
+                      child: Text('-'),
+                    ),
+                    Text(byteToSize(currentObj.size))
+                  ],
+                ),
+          trailing: isPrefix
+              ? IconButton(icon: Icon(Icons.navigate_next), onPressed: null)
+              : _renderMoreMenu(currentObj),
+          onTap: () async {
+            if (isPrefix) {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => BucketRoute(
+                        bucketName: widget.bucketName,
+                        prefix: currentObj.prefix,
+                      )));
+            }
+          },
+        );
         return element;
       },
     );
@@ -400,63 +329,6 @@ class _BucketRoute extends State<BucketRoute> {
                           subject: 'Share you $filename');
                     });
                   }));
-        });
-  }
-
-  void _createBucket() {
-    showDialog(
-        context: this.context,
-        builder: (context) {
-          close() {
-            Navigator.of(context).pop(true);
-          }
-
-          String bucketName = '';
-          return StatefulBuilder(
-              builder: (BuildContext twoContext, StateSetter setState) {
-            return AlertDialog(
-                title: Title(
-                  color: Color(0xff333333),
-                  child: Text('创建Bucket'),
-                ),
-                content: TextField(
-                  autofocus: true,
-                  textAlign: TextAlign.center,
-                  onChanged: (value) {
-                    setState(() {
-                      bucketName = value;
-                    });
-                  },
-                ),
-                actions: [
-                  FlatButton(
-                    onPressed: close,
-                    child: Text('取消'),
-                  ),
-                  FlatButton(
-                    onPressed: () async {
-                      try {
-                        MinioInvalidBucketNameError.check(bucketName);
-                      } catch (e) {
-                        toast('请正确填写bucket name！');
-                        return;
-                      }
-                      final hasExists =
-                          await this.minioController.buckerExists(bucketName);
-                      if (hasExists) {
-                        toast('bucket已存在');
-                        return;
-                      }
-                      this.minioController.createBucket(bucketName).then((_) {
-                        toast('创建成功');
-                        close();
-                        this.getBucketList();
-                      });
-                    },
-                    child: Text('创建'),
-                  )
-                ]);
-          });
         });
   }
 
