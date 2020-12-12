@@ -67,17 +67,17 @@ class _DownloadPageState extends State<DownloadPage> {
             '已下载 ${byteToSize(current.downloadSize)} | 需下载 ${byteToSize(current.fileSize)}';
         break;
       case DownloadState.COMPLETED:
-        text = '下载完成，可单击预览';
+        text = '下载完成，可进行预览';
         break;
       case DownloadState.ERROR:
         text = 'Error: ${current.stateText}';
         textStyle = TextStyle(color: Colors.red);
         break;
       case DownloadState.PAUSE:
-        text = '正在等待下载，可单击插队';
+        text = '正在等待下载';
         break;
       case DownloadState.STOP:
-        text = '已停止下载，需重新下载请单击';
+        text = '已停止下载';
         break;
     }
     return Text(

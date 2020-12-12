@@ -145,7 +145,7 @@ class DownloadScheduler {
   }
 
   // 正常下载
-  add(DownloadFileInstance instance) {
+  void add(DownloadFileInstance instance) {
     print('listen where $instance');
     this.scheduler.add(instance);
   }
@@ -155,14 +155,16 @@ class DownloadScheduler {
     final index = this.getIndex(instance);
     if (index != -1) {
       this.stopDownload(index);
-      return;
     }
 
-    if (!this.canDownload) {
-      this.stopDownload(0);
+    print('添加停止');
+    print(this.canDownload);
+    // 如果还有在等待运行的则取出最后一个然后下载
+    final waitingIndex = this.waitingDownloadList.length;
+    if (this.canDownload && waitingIndex != 0) {
+      final runInstance = this.waitingDownloadList.removeAt(waitingIndex - 1);
+      this.scheduler.add(runInstance);
     }
-
-    this.scheduler.add(instance);
   }
 
   // 插队下载 把第一个暂停，提供给正在等待下载的
