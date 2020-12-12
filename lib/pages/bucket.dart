@@ -1,7 +1,6 @@
 import 'package:MinioClient/minio/DownloadController.dart';
 import 'package:MinioClient/minio/minio.dart';
 import 'package:MinioClient/pages/widgets/ShareDialog.dart';
-import 'package:MinioClient/utils/time.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:MinioClient/widgets/FloatingActionExtendButton/index.dart';
 import 'package:MinioClient/widgets/PreviewNetwork/preview_network.dart';
@@ -10,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:minio/models.dart';
 import 'package:share/share.dart';
+
+import 'widgets/ListTileAnimation.dart';
 
 class BucketRoute extends StatefulWidget {
   BucketRoute({Key key, this.bucketName, this.prefix = ''}) : super(key: key);
@@ -85,152 +86,36 @@ class _BucketRoute extends State<BucketRoute> {
         ));
   }
 
-  Widget _renderLeading(obj) {
-    final key = obj.key;
-    if (obj is Prefix) {
-      return Icon(Icons.folder);
-    }
-    if (key is String) {
-      print(key.lastIndexOf('.'));
-      final index = key.lastIndexOf('.');
-      if (index == -1) {
-        return Icon(Icons.text_snippet_rounded);
-      }
-      final ext = key.substring(key.lastIndexOf('.') + 1);
-      switch (ext) {
-        case 'mp4':
-        case 'avi':
-          return Icon(Icons.ondemand_video_rounded);
-        case 'mp3':
-          return Icon(Icons.audiotrack_rounded);
-        case 'jpg':
-        case 'png':
-        case 'jpeg':
-          return Icon(Icons.image_rounded);
-        case 'pdf':
-          return Icon(Icons.picture_as_pdf_rounded);
-        case 'md':
-          return Icon(Icons.article);
-        default:
-          return Icon(Icons.text_snippet_rounded);
-      }
-    } else {
-      return Icon(Icons.text_snippet_rounded);
-    }
-  }
-
   Widget _renderListObjects() {
     return ListView.builder(
       itemCount: this.bucketObjects.length,
       itemBuilder: (context, index) {
-        var element;
         final currentObj = this.bucketObjects[index];
         // 是否为路径
-        final isPrefix = currentObj is Prefix;
-        element = ListTile(
-          leading: _renderLeading(currentObj),
-          title: Text(currentObj.key.replaceAll(widget.prefix, '')),
-          subtitle: isPrefix
-              ? null
-              : Row(
-                  children: [
-                    Text(formatTime(
-                        'yyyy/MM/dd/ HH:mm', currentObj.lastModified)),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4.0),
-                      child: Text('-'),
-                    ),
-                    Text(byteToSize(currentObj.size))
-                  ],
-                ),
-          trailing: isPrefix
-              ? IconButton(icon: Icon(Icons.navigate_next), onPressed: null)
-              : _renderMoreMenu(currentObj),
-          onTap: () async {
-            if (isPrefix) {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => BucketRoute(
-                        bucketName: widget.bucketName,
-                        prefix: currentObj.prefix,
-                      )));
-            }
-          },
-        );
-        return element;
+        return ListTileAnimation(
+            current: currentObj,
+            prefix: widget.prefix,
+            handleSelectMenu: this.handleSelectMenu,
+            bucketName: widget.bucketName);
       },
     );
   }
 
-  _renderMoreMenu(currentObj) {
-    return PopupMenuButton(
-      onSelected: (value) async {
-        switch (value) {
-          case 'download':
-            this._download(currentObj);
-            break;
-          case 'preview':
-            this._preview(currentObj.key);
-            break;
-          case 'remove':
-            this._remove(currentObj.key);
-            break;
-          case 'share':
-            this._share(currentObj.key);
-            break;
-        }
-      },
-      itemBuilder: (buildContext) {
-        List<PopupMenuEntry<dynamic>> list = [
-          PopupMenuItem(
-            child: Row(children: [
-              Icon(Icons.preview_sharp),
-              Padding(
-                child: Text('预览'),
-                padding: EdgeInsets.symmetric(
-                  horizontal: 5,
-                ),
-              ),
-            ]),
-            value: 'preview',
-          ),
-          PopupMenuItem(
-            child: Row(children: [
-              Icon(Icons.download_sharp),
-              Padding(
-                child: Text('下载'),
-                padding: EdgeInsets.symmetric(
-                  horizontal: 5,
-                ),
-              ),
-            ]),
-            value: 'download',
-          ),
-          PopupMenuItem(
-              child: Row(children: [
-                Icon(Icons.share_sharp),
-                Padding(
-                  child: Text('分享'),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 5,
-                  ),
-                ),
-              ]),
-              value: 'share'),
-          PopupMenuItem(
-              child: Row(children: [
-                Icon(Icons.delete_sharp),
-                Padding(
-                  child: Text('删除'),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 5,
-                  ),
-                ),
-              ]),
-              value: 'remove')
-        ];
-        return list;
-      },
-    );
+  handleSelectMenu(value, currentObj) {
+    switch (value) {
+      case 'download':
+        this._download(currentObj);
+        break;
+      case 'preview':
+        this._preview(currentObj.key);
+        break;
+      case 'remove':
+        this._remove(currentObj.key);
+        break;
+      case 'share':
+        this._share(currentObj.key);
+        break;
+    }
   }
 
   void _preview(filename) {
