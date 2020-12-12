@@ -24,7 +24,7 @@ class _FileOperationRouteState extends State<FileOperationRoute> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('记录'),
+        title: Text('传输记录'),
         bottom: TabBar(
           controller: _controller,
           isScrollable: true,

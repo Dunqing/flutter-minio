@@ -47,8 +47,9 @@ class _DownloadPageState extends State<DownloadPage> {
               itemCount: data.length,
               itemBuilder: (context, index) {
                 final current = data[index];
+                final filename = current.filename.split('/').last;
                 return ListTile(
-                    title: Text(current.filename),
+                    title: Text(filename),
                     subtitle: _renderSubtitle(current),
                     trailing: _renderTrailing(current));
               },
@@ -58,13 +59,14 @@ class _DownloadPageState extends State<DownloadPage> {
   }
 
   _renderSubtitle(DownloadFileInstance current) {
+    final progress = (100 * (current.downloadSize / current.fileSize)).toInt();
     String text;
 
-    TextStyle textStyle = null;
+    TextStyle textStyle;
     switch (current.state) {
       case DownloadState.DOWNLOAD:
         text =
-            '已下载 ${byteToSize(current.downloadSize)} | 需下载 ${byteToSize(current.fileSize)}';
+            '${byteToSize(current.downloadSize)}/${byteToSize(current.fileSize)} 已完成$progress%';
         break;
       case DownloadState.COMPLETED:
         text = '下载完成，可进行预览';
@@ -77,7 +79,7 @@ class _DownloadPageState extends State<DownloadPage> {
         text = '正在等待下载';
         break;
       case DownloadState.STOP:
-        text = '已停止下载';
+        text = '已停止下载 已完成$progress%';
         break;
     }
     return Text(
@@ -87,7 +89,6 @@ class _DownloadPageState extends State<DownloadPage> {
   }
 
   _renderTrailing(DownloadFileInstance current) {
-    final progress = (100 * (current.downloadSize / current.fileSize)).toInt();
     switch (current.state) {
       case DownloadState.DOWNLOAD:
         return FlatButton.icon(
