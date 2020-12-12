@@ -9,6 +9,7 @@ import 'package:MinioClient/widgets/FloatingActionExtendButton/index.dart';
 import 'package:MinioClient/widgets/PreviewNetwork/preview_network.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:minio/minio.dart';
 import 'package:minio/models.dart';
 import 'package:share/share.dart';
 
@@ -109,7 +110,7 @@ class _BucketRoute extends State<BucketRoute> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text(widget.bucketName ?? 'All Buckets'),
+          title: Text(widget.bucketName ?? '所有bucket'),
           actions: [_renderLogAction()],
         ),
         body: Container(child: this._renderListObjects()),
@@ -433,9 +434,17 @@ class _BucketRoute extends State<BucketRoute> {
                     child: Text('取消'),
                   ),
                   FlatButton(
-                    onPressed: () {
-                      if (bucketName == '') {
-                        toast('名字不能为空');
+                    onPressed: () async {
+                      try {
+                        MinioInvalidBucketNameError.check(bucketName);
+                      } catch (e) {
+                        toast('请正确填写bucket name！');
+                        return;
+                      }
+                      final hasExists =
+                          await this.minioController.buckerExists(bucketName);
+                      if (hasExists) {
+                        toast('bucket已存在');
                         return;
                       }
                       this.minioController.createBucket(bucketName).then((_) {

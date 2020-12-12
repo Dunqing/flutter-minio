@@ -113,6 +113,14 @@ class DownloadScheduler {
       });
   }
 
+  // 删除错误下载
+  removeErrorDownload(instance, err) {
+    this.currentDownloadList.remove(instance);
+    this.downloadController.updateDownloadState(instance, DownloadState.ERROR,
+        stateText: err.toString());
+    this._refresh();
+  }
+
   // 删除下载
   removeDownload(instance) {
     this.currentDownloadList.remove(instance);
@@ -207,7 +215,7 @@ class DownloadController {
     });
     getDatabasesPath().then((path) async {
       final dbPath = path + '/minio.db';
-      await deleteDatabase(dbPath);
+      // await deleteDatabase(dbPath);
       this._database = await openDatabase(dbPath, version: 1,
           onCreate: (Database db, int version) {
         db.execute(
@@ -331,9 +339,7 @@ class DownloadController {
         .getPartialObject(instance.bucketName, instance.filename,
             onListen: _onListen, onCompleted: _onCompleted, onStart: _onStart)
         .catchError((err) {
-      print(err);
-      this.updateDownloadState(instance, DownloadState.ERROR,
-          stateText: err.toString());
+      this.scheduler.removeErrorDownload(instance, err.toString());
     });
   }
 

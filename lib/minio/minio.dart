@@ -6,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:minio/io.dart';
 import 'package:minio/minio.dart';
 import 'package:minio/models.dart';
-import 'package:path/path.dart' show dirname;
+import 'package:path/path.dart' show basename, dirname;
 import 'package:path_provider/path_provider.dart';
 // ignore: unused_import
 import 'package:rxdart/rxdart.dart';
@@ -26,6 +26,9 @@ class MinioController {
   String bucketName;
   String prefix;
 
+  /// maximum object size (5TB)
+  final maxObjectSize = 5 * 1024 * 1024 * 1024 * 1024;
+
   MinioController({this.bucketName, this.prefix}) {
     if (minio is Minio) {
       this.minio = minio;
@@ -40,6 +43,16 @@ class MinioController {
       );
       this.minio = minio;
     }
+  }
+
+  Future<List<IncompleteUpload>> listIncompleteUploads(
+      {String bucketName}) async {
+    print(bucketName ?? this.bucketName);
+    final list = this
+        .minio
+        .listIncompleteUploads(bucketName ?? this.bucketName, '')
+        .toList();
+    return list;
   }
 
   Future<Map<dynamic, dynamic>> getBucketObjects(
@@ -63,6 +76,10 @@ class MinioController {
 
   Future<List<Bucket>> getListBuckets() async {
     return this.minio.listBuckets();
+  }
+
+  Future<bool> buckerExists(String bucket) async {
+    return this.minio.bucketExists(bucket);
   }
 
   Future<void> downloadFile(filename) async {

@@ -42,19 +42,27 @@ class _DownloadPageState extends State<DownloadPage> {
                   ]);
                 });
           }
-          return Container(
-            child: ListView.builder(
-              itemCount: data.length,
-              itemBuilder: (context, index) {
-                final current = data[index];
-                final filename = current.filename.split('/').last;
-                return ListTile(
-                    title: Text(filename),
-                    subtitle: _renderSubtitle(current),
-                    trailing: _renderTrailing(current));
-              },
-            ),
-          );
+          return data.length == 0
+              ? Container(
+                  alignment: Alignment.center,
+                  child: Text(
+                    '你还没下载过东西！',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                )
+              : Container(
+                  child: ListView.builder(
+                    itemCount: data.length,
+                    itemBuilder: (context, index) {
+                      final current = data[index];
+                      final filename = current.filename.split('/').last;
+                      return ListTile(
+                          title: Text(filename),
+                          subtitle: _renderSubtitle(current),
+                          trailing: _renderTrailing(current));
+                    },
+                  ),
+                );
         });
   }
 
