@@ -56,10 +56,18 @@ class _DownloadPageState extends State<DownloadPage> {
                     itemBuilder: (context, index) {
                       final current = data[index];
                       final filename = current.filename.split('/').last;
-                      return ListTile(
-                          title: Text(filename),
-                          subtitle: _renderSubtitle(current),
-                          trailing: _renderTrailing(current));
+                      return Column(
+                        children: [
+                          ListTile(
+                              title: Text(filename),
+                              subtitle: _renderSubtitle(current),
+                              trailing: _renderTrailing(current)),
+                          if (current.state == DownloadState.DOWNLOAD)
+                            LinearProgressIndicator(
+                              value: current.downloadSize / current.fileSize,
+                            )
+                        ],
+                      );
                     },
                   ),
                 );

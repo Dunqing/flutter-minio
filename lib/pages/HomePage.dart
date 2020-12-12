@@ -1,5 +1,7 @@
+import 'package:MinioClient/minio/DownloadController.dart';
 import 'package:MinioClient/minio/minio.dart';
 import 'package:MinioClient/utils/utils.dart';
+import 'package:MinioClient/widgets/TransferButton/TransferButton.dart';
 import 'package:MinioClient/widgets/drawer/drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:minio/minio.dart';
@@ -28,10 +30,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<Bucket> buckets = [];
   MinioController minioController;
+  DownloadController downloadController;
 
   initState() {
     super.initState();
     this.minioController = MinioController();
+    this.downloadController = createDownloadInstance();
     this.getBucketList();
   }
 
@@ -56,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
+        actions: [TransferButton(downloadController: this.downloadController)],
       ),
       drawer: DrawerWidget(),
       body: Container(

@@ -118,7 +118,6 @@ class DownloadScheduler {
     this.currentDownloadList.remove(instance);
     this.downloadController.updateDownloadState(instance, DownloadState.ERROR,
         stateText: err.toString());
-    this._refresh();
   }
 
   // 删除下载
@@ -130,7 +129,6 @@ class DownloadScheduler {
   // 下载完毕后通知调度下载
   notify(DownloadFileInstance instance) {
     this.removeDownload(instance);
-    this._refresh();
 
     print('当前还有几个要下载的 ${this.waitingDownloadList.length}');
     // 如果等待下载的已下完则结束运行
@@ -161,11 +159,6 @@ class DownloadScheduler {
   void add(DownloadFileInstance instance) {
     print('listen where $instance');
     this.scheduler.add(instance);
-  }
-
-  // 触发更新，让数量变化
-  _refresh() {
-    this.scheduler.add(null);
   }
 
   // 如果状态已经在下载了则暂停 不加到等待队列
@@ -340,6 +333,7 @@ class DownloadController {
             onListen: _onListen, onCompleted: _onCompleted, onStart: _onStart)
         .catchError((err) {
       this.scheduler.removeErrorDownload(instance, err.toString());
+      this.refresh();
     });
   }
 

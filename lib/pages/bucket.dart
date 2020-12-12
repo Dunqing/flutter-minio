@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:MinioClient/minio/DownloadController.dart';
 import 'package:MinioClient/minio/minio.dart';
 import 'package:MinioClient/pages/widgets/ShareDialog.dart';
@@ -7,6 +5,7 @@ import 'package:MinioClient/utils/time.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:MinioClient/widgets/FloatingActionExtendButton/index.dart';
 import 'package:MinioClient/widgets/PreviewNetwork/preview_network.dart';
+import 'package:MinioClient/widgets/TransferButton/TransferButton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:minio/models.dart';
@@ -27,47 +26,16 @@ class _BucketRoute extends State<BucketRoute> {
   MinioController minioController;
   DownloadController downloadController;
 
-  // ignore: cancel_subscriptions
-  StreamSubscription<DownloadFileInstance> _listenCount;
-
-  int downloadCount = 0;
-
   initState() {
     super.initState();
     this.minioController =
         MinioController(bucketName: widget.bucketName, prefix: widget.prefix);
     this.downloadController =
         createDownloadInstance(minio: this.minioController);
-    this.listenDownloadCount();
     this.getBucketObjects();
   }
 
-  listenDownloadCount() {
-    final scheduler = this.downloadController.scheduler;
-    changeCount() {
-      this.downloadCount = scheduler.currentDownloadList.length +
-          scheduler.waitingDownloadList.length;
-    }
-
-    // 初始化个数
-    changeCount();
-
-    if (scheduler == null) {
-      setState(() {
-        this.downloadCount = 0;
-      });
-    }
-    this._listenCount = scheduler.scheduler.stream.listen((data) {
-      Future.delayed(Duration.zero).then((_) {
-        setState(() {
-          changeCount();
-        });
-      });
-    });
-  }
-
   dispose() {
-    this._listenCount.cancel();
     super.dispose();
   }
 
@@ -97,7 +65,9 @@ class _BucketRoute extends State<BucketRoute> {
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.bucketName ?? '所有bucket'),
-          actions: [_renderLogAction()],
+          actions: [
+            TransferButton(downloadController: this.downloadController)
+          ],
         ),
         body: Container(child: this._renderListObjects()),
         floatingActionButton: FloatingActionExtendButton(
@@ -338,40 +308,5 @@ class _BucketRoute extends State<BucketRoute> {
         .downloadController
         .insert(widget.bucketName, obj.key, now, now, obj.size, 0);
     // this.minioController.downloadFile(filename.key);
-  }
-
-  Widget _renderLogAction() {
-    return Container(
-      width: 60,
-      margin: EdgeInsets.only(right: 5),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          IconButton(
-            icon: Icon(Icons.swap_vert),
-            onPressed: () {
-              Navigator.of(context).pushNamed('FileOperationLog');
-            },
-          ),
-          if (this.downloadCount != 0)
-            Positioned(
-                right: 0,
-                top: 5,
-                child: Container(
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  width: 20,
-                  height: 20,
-                  child: Text(
-                    this.downloadCount.toString(),
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ))
-        ],
-      ),
-    );
   }
 }
