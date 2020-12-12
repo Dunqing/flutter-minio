@@ -1,6 +1,7 @@
 import 'package:MinioClient/minio/DownloadController.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:open_file/open_file.dart';
 import 'package:rxdart/rxdart.dart';
 
 class DownloadPage extends StatefulWidget {
@@ -112,10 +113,7 @@ class _DownloadPageState extends State<DownloadPage> {
             label: Text('预览'),
             icon: Icon(Icons.preview_outlined),
             onPressed: () {
-              print(current.filePath);
-              permissionStorage().then((res) {
-                launchURL('content://${current.filePath}');
-              });
+              OpenFile.open(current.filePath);
             });
         break;
       case DownloadState.PAUSE:
