@@ -97,6 +97,9 @@ class DownloadScheduler {
   onListen({void Function(DownloadFileInstance) onData}) {
     this.scheduler.stream
       ..listen((instance) {
+        if (instance == null) {
+          return;
+        }
         // 能下载
         if (this.canDownload) {
           this.dispatchDownload(instance);
@@ -119,6 +122,7 @@ class DownloadScheduler {
   // 下载完毕后通知调度下载
   notify(DownloadFileInstance instance) {
     this.removeDownload(instance);
+    this._refresh();
 
     print('当前还有几个要下载的 ${this.waitingDownloadList.length}');
     // 如果等待下载的已下完则结束运行
@@ -151,6 +155,11 @@ class DownloadScheduler {
     this.scheduler.add(instance);
   }
 
+  // 触发更新，让数量变化
+  _refresh() {
+    this.scheduler.add(null);
+  }
+
   // 如果状态已经在下载了则暂停 不加到等待队列
   void addStop(DownloadFileInstance instance) {
     final index = this.getIndex(instance);
@@ -158,8 +167,6 @@ class DownloadScheduler {
       this.stopDownload(index);
     }
 
-    print('添加停止');
-    print(this.canDownload);
     // 如果还有在等待运行的则取出最后一个然后下载
     final waitingIndex = this.waitingDownloadList.length;
     if (this.canDownload && waitingIndex != 0) {
@@ -319,8 +326,15 @@ class DownloadController {
       instance.setSubscription(subscription);
     }
 
-    return this.minio.getPartialObject(instance.bucketName, instance.filename,
-        onListen: _onListen, onCompleted: _onCompleted, onStart: _onStart);
+    return this
+        .minio
+        .getPartialObject(instance.bucketName, instance.filename,
+            onListen: _onListen, onCompleted: _onCompleted, onStart: _onStart)
+        .catchError((err) {
+      print(err);
+      this.updateDownloadState(instance, DownloadState.ERROR,
+          stateText: err.toString());
+    });
   }
 
   // 重新下载
