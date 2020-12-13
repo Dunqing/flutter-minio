@@ -1,9 +1,11 @@
+import 'package:MinioClient/pages/SettingRoute.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:MinioClient/widgets/drawer/AboutProject.dart';
 import 'package:flutter/material.dart';
 
 class DrawerWidget extends StatelessWidget {
-  const DrawerWidget({Key key}) : super(key: key);
+  final String accessKey;
+  const DrawerWidget({Key key, this.accessKey}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +41,7 @@ class DrawerWidget extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
-                  child: Text('Access Key: minio'),
+                  child: Text('Access Key: $accessKey'),
                 ),
               ],
             ),
@@ -62,8 +64,12 @@ class DrawerWidget extends StatelessWidget {
               aboutProject(context);
             }),
         ListTile(
-          title: Text('设置'),
-        ),
+            title: Text('设置'),
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+                return SettingRoute();
+              }));
+            }),
       ],
     ));
   }

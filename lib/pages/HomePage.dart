@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:minio/minio.dart';
 import 'package:minio/models.dart';
 
-import 'bucket.dart';
+import 'BucketRoute.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -33,19 +33,38 @@ class _MyHomePageState extends State<MyHomePage> {
   MinioController minioController;
   DownloadController downloadController;
 
+  bool showConfigButton = false;
+
+  String accessKey;
+  _MyHomePageState() {
+    this.minioController = MinioController();
+  }
+
   @override
   initState() {
     super.initState();
-    this.minioController = MinioController();
+    getAccessKey().then((key) {
+      this.accessKey = key;
+    });
+    hasMinioConfig().then((value) {
+      if (value) {
+        Future.delayed(Duration.zero).then((res) {
+          this.getBucketList();
+        });
+      } else {
+        setState(() {
+          this.showConfigButton = true;
+        });
+      }
+    });
     this.downloadController =
         createDownloadInstance(minio: this.minioController);
-    this.getBucketList();
   }
 
   getBucketList() {
     this.minioController.getListBuckets().then((value) {
       this.setState(() {
-        this.buckets = value.toList();
+        this.buckets = value;
       });
     });
   }
@@ -71,15 +90,19 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
         actions: [TransferButton(downloadController: this.downloadController)],
       ),
-      drawer: DrawerWidget(),
-      body: Container(
-        child: _renderListView(),
+      drawer: DrawerWidget(
+        accessKey: accessKey,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _createBucket,
-        tooltip: '创建Bucket',
-        child: Icon(Icons.create_new_folder_rounded),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      body: Container(
+        child: showConfigButton ? _renderConfigButton() : _renderListView(),
+      ),
+      floatingActionButton: showConfigButton
+          ? null
+          : FloatingActionButton(
+              onPressed: _createBucket,
+              tooltip: '创建Bucket',
+              child: Icon(Icons.create_new_folder_rounded),
+            ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
@@ -172,5 +195,47 @@ class _MyHomePageState extends State<MyHomePage> {
                 builder: (context) => BucketRoute(bucketName: bucket.name)));
           },
         ));
+  }
+
+  Widget _renderConfigButton() {
+    return Container(
+      alignment: Alignment.center,
+      constraints: BoxConstraints.expand(),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('你还没有配置账号信息，赶紧去配置吧',
+              style: TextStyle(color: Colors.red, fontSize: 18)),
+          Row(
+            children: [
+              RaisedButton(
+                color: Colors.blue,
+                textColor: Colors.white,
+                child: Text('前往配置'),
+                onPressed: () {
+                  Navigator.of(context).pushNamed('Setting');
+                },
+              ),
+              RaisedButton(
+                color: Colors.blue,
+                textColor: Colors.white,
+                child: Text('设置公用账号'),
+                onPressed: () async {
+                  await setMinioConfig(
+                      endPoint: '',
+                      url: 'https://play.min.io',
+                      accessKey: 'accessKey',
+                      secretKey: 'secretKey');
+
+                  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) {
+                    return true;
+                  });
+                },
+              ),
+            ],
+          )
+        ],
+      ),
+    );
   }
 }

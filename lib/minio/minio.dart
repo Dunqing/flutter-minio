@@ -11,6 +11,7 @@ import 'package:path/path.dart' show dirname;
 import 'package:path_provider/path_provider.dart';
 // ignore: unused_import
 import 'package:rxdart/rxdart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Prefix {
   bool isPrefix;
@@ -20,29 +21,54 @@ class Prefix {
   Prefix({this.key, this.prefix, this.isPrefix});
 }
 
-var minio;
+var _minio;
+
+Future<Minio> _resetMinio() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool useSSl = prefs.getBool('useSSL');
+  String endPoint = prefs.getString('endPoint');
+  int port = prefs.getInt('port');
+  String accessKey = prefs.getString('accessKey');
+  String secretKey = prefs.getString('secretKey');
+
+  try {
+    _minio = Minio(
+      useSSL: useSSl,
+      endPoint: endPoint,
+      port: port,
+      accessKey: accessKey,
+      secretKey: secretKey,
+      region: 'cn-north-1',
+    );
+  } catch (err) {
+    toastError(err.toString());
+  }
+  return _minio;
+}
 
 class MinioController {
   Minio minio;
   String bucketName;
   String prefix;
 
+  static resetMinio() {
+    _resetMinio();
+  }
+
   /// maximum object size (5TB)
   final maxObjectSize = 5 * 1024 * 1024 * 1024 * 1024;
 
   MinioController({this.bucketName, this.prefix}) {
-    if (minio is Minio) {
-      this.minio = minio;
+    print('111');
+    print(_minio);
+    if (_minio is Minio) {
+      this.minio = _minio;
     } else {
-      minio = Minio(
-        useSSL: false,
-        endPoint: '49.232.194.85',
-        port: 9001,
-        accessKey: 'minio',
-        secretKey: 'minio123',
-        region: 'cn-north-1',
-      );
-      this.minio = minio;
+      _resetMinio().then((_) {
+        print('222');
+        print(_);
+        this.minio = _;
+      });
     }
   }
 
@@ -77,6 +103,8 @@ class MinioController {
   }
 
   Future<List<Bucket>> getListBuckets() async {
+    print('bucket');
+    print(this.minio);
     return this.minio.listBuckets();
   }
 

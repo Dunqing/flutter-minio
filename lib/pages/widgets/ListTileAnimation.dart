@@ -1,8 +1,9 @@
 import 'package:MinioClient/minio/minio.dart';
-import 'package:MinioClient/pages/bucket.dart';
 import 'package:MinioClient/utils/time.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:flutter/material.dart';
+
+import '../BucketRoute.dart';
 
 typedef HandleSelectMenu = void Function(String value, Object current);
 
