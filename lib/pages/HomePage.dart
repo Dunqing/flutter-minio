@@ -33,6 +33,7 @@ class _MyHomePageState extends State<MyHomePage> {
   MinioController minioController;
   DownloadController downloadController;
 
+  @override
   initState() {
     super.initState();
     this.minioController = MinioController();
@@ -47,6 +48,12 @@ class _MyHomePageState extends State<MyHomePage> {
         this.buckets = value.toList();
       });
     });
+  }
+
+  @override
+  void dispose() {
+    this.downloadController.close();
+    super.dispose();
   }
 
   @override
