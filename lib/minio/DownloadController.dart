@@ -72,7 +72,9 @@ class DownloadScheduler {
           stateText: '文件错误，请重新下载');
       return;
     }
-    removeInstance.changeState(DownloadState.STOP);
+    this
+        .downloadController
+        .updateDownloadState(removeInstance, DownloadState.STOP);
     removeInstance.subscription.cancel();
   }
 
@@ -87,7 +89,9 @@ class DownloadScheduler {
     }
     // 删除在下载队列
     this.currentDownloadList.remove(removeInstance);
-    removeInstance.changeState(DownloadState.PAUSE);
+    this
+        .downloadController
+        .updateDownloadState(removeInstance, DownloadState.PAUSE);
     removeInstance.subscription.cancel();
     // 只是暂停 加入到等待队列
     this.waitingDownloadList.add(removeInstance);
@@ -123,7 +127,9 @@ class DownloadScheduler {
   // 删除下载
   removeDownload(instance) {
     this.currentDownloadList.remove(instance);
-    instance.changeState(DownloadState.COMPLETED);
+    this
+        .downloadController
+        .updateDownloadState(instance, DownloadState.COMPLETED);
   }
 
   // 下载完毕后通知调度下载
@@ -144,7 +150,9 @@ class DownloadScheduler {
   // 触发下载
   dispatchDownload(DownloadFileInstance instance) {
     this.currentDownloadList.add(instance);
-    instance.changeState(DownloadState.DOWNLOAD);
+    this
+        .downloadController
+        .updateDownloadState(instance, DownloadState.DOWNLOAD);
     this.downloadController.dispatchDownload(instance);
   }
 

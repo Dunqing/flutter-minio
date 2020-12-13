@@ -35,7 +35,8 @@ class _MyHomePageState extends State<MyHomePage> {
   initState() {
     super.initState();
     this.minioController = MinioController();
-    this.downloadController = createDownloadInstance();
+    this.downloadController =
+        createDownloadInstance(minio: this.minioController);
     this.getBucketList();
   }
 
