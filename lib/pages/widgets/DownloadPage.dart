@@ -132,7 +132,11 @@ class _DownloadPageState extends State<DownloadPage> {
             label: Text('预览'),
             icon: Icon(Icons.preview_outlined),
             onPressed: () {
-              OpenFile.open(current.filePath);
+              if (hasFileExists(current.filePath)) {
+                OpenFile.open(current.filePath);
+              } else {
+                toastError('预览失败，下载的文件已被删除');
+              }
             });
         break;
       case DownloadState.PAUSE:

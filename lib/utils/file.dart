@@ -2,6 +2,12 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+///文件是否存在
+bool hasFileExists(url) {
+  final file = File(url);
+  return file.existsSync();
+}
+
 /// 删除文件
 Future<FileSystemEntity> removeFile(url) {
   final file = File(url);
