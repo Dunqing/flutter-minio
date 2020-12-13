@@ -25,11 +25,16 @@ var _minio;
 
 Future<Minio> _resetMinio() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  bool useSSl = prefs.getBool('useSSL');
+  bool useSSl = prefs.getBool('useSSL') ?? true;
   String endPoint = prefs.getString('endPoint');
   int port = prefs.getInt('port');
   String accessKey = prefs.getString('accessKey');
   String secretKey = prefs.getString('secretKey');
+
+  // 是否存在配置
+  if (accessKey?.isEmpty != false || secretKey?.isEmpty != false) {
+    return Future.error('no has config');
+  }
 
   try {
     _minio = Minio(

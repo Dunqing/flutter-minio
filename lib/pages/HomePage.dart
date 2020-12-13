@@ -206,33 +206,41 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           Text('你还没有配置账号信息，赶紧去配置吧',
               style: TextStyle(color: Colors.red, fontSize: 18)),
-          Row(
-            children: [
-              RaisedButton(
-                color: Colors.blue,
-                textColor: Colors.white,
-                child: Text('前往配置'),
-                onPressed: () {
-                  Navigator.of(context).pushNamed('Setting');
-                },
-              ),
-              RaisedButton(
-                color: Colors.blue,
-                textColor: Colors.white,
-                child: Text('设置公用账号'),
-                onPressed: () async {
-                  await setMinioConfig(
-                      endPoint: '',
-                      url: 'https://play.min.io',
-                      accessKey: 'accessKey',
-                      secretKey: 'secretKey');
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                RaisedButton(
+                  color: Colors.blue,
+                  textColor: Colors.white,
+                  child: Text('前往配置'),
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('Setting');
+                  },
+                ),
+                SizedBox(
+                  child: null,
+                  width: 20,
+                ),
+                RaisedButton(
+                  color: Colors.blue,
+                  textColor: Colors.white,
+                  child: Text('设置公用账号'),
+                  onPressed: () async {
+                    await setMinioConfig(
+                        endPoint: 'play.min.io',
+                        url: 'https://play.min.io',
+                        accessKey: 'minio',
+                        secretKey: 'minio123');
 
-                  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) {
-                    return true;
-                  });
-                },
-              ),
-            ],
+                    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) {
+                      return true;
+                    });
+                  },
+                ),
+              ],
+            ),
           )
         ],
       ),

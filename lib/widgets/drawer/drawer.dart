@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 class DrawerWidget extends StatelessWidget {
   final String accessKey;
-  const DrawerWidget({Key key, this.accessKey}) : super(key: key);
+  const DrawerWidget({Key key, this.accessKey = '你还未设置'}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

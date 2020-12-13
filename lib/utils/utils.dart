@@ -79,7 +79,6 @@ RegExp getUrlRe() {
 }
 
 isValidatorUrl(url) {
-  final map = Map();
   return getUrlRe().hasMatch(url);
 }
 
@@ -90,9 +89,9 @@ getUrlInfo(url) {
 
 Future<bool> hasMinioConfig() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString('accessKey').isNotEmpty &&
-      prefs.getString('secretKey').isNotEmpty &&
-      prefs.getString('endPoint').isNotEmpty;
+  return prefs.getString('accessKey')?.isNotEmpty == true &&
+      prefs.getString('secretKey')?.isNotEmpty == true &&
+      prefs.getString('endPoint')?.isNotEmpty == true;
 }
 
 Future<String> getAccessKey() async {

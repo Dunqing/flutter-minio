@@ -37,10 +37,6 @@ class _BucketRoute extends State<BucketRoute> {
     this.getBucketObjects();
   }
 
-  dispose() {
-    super.dispose();
-  }
-
   getBucketObjects({bool refresh = false}) async {
     this
         .minioController
