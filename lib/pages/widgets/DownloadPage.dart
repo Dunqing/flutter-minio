@@ -1,4 +1,6 @@
 import 'package:MinioClient/minio/DownloadController.dart';
+import 'package:MinioClient/pages/widgets/ConfirmDialog.dart';
+import 'package:MinioClient/utils/file.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
@@ -140,6 +142,18 @@ class _DownloadPageState extends State<DownloadPage> {
             onPressed: () {
               this.downloadController.advanceDownload(current);
               toast('继续下载');
+            });
+      case DownloadState.ERROR:
+        return FlatButton.icon(
+            icon: Icon(Icons.refresh),
+            label: Text('重新下载'),
+            onPressed: () {
+              showConfirmDialog(this.context,
+                  title: '重新下载', content: Text('是否要重新下载此文件？'), onConfirm: () {
+                removeFile(current.filePath).then((res) {
+                  this.downloadController.reDownload(current);
+                });
+              });
             });
       default:
         Text('下载错误，请重新下载');

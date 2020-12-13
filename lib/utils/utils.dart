@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -58,15 +57,6 @@ toastError(String msg) {
       backgroundColor: Colors.red,
       textColor: Colors.white,
       fontSize: 16.0);
-}
-
-Future<String> getDictionaryPath({String filename}) async {
-  var path = await getExternalStorageDirectory();
-  if (filename == null) {
-    return path.path;
-  }
-  final filePath = '${path.path}/$filename';
-  return filePath;
 }
 
 launchURL(String url) async {

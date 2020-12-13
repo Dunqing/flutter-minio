@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:MinioClient/utils/file.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:minio/io.dart';
 import 'package:minio/minio.dart';
 import 'package:minio/models.dart';
-import 'package:path/path.dart' show basename, dirname;
+import 'package:path/path.dart' show dirname;
 import 'package:path_provider/path_provider.dart';
 // ignore: unused_import
 import 'package:rxdart/rxdart.dart';

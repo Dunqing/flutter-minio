@@ -1,5 +1,6 @@
 import 'package:MinioClient/minio/DownloadController.dart';
 import 'package:MinioClient/minio/minio.dart';
+import 'package:MinioClient/pages/widgets/ConfirmDialog.dart';
 import 'package:MinioClient/pages/widgets/ShareDialog.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:MinioClient/widgets/FloatingActionExtendButton/index.dart';
@@ -126,34 +127,13 @@ class _BucketRoute extends State<BucketRoute> {
   }
 
   void _remove(filename) {
-    showDialog(
-        context: this.context,
-        builder: (context) {
-          close() {
-            Navigator.of(context).pop(true);
-          }
-
-          return AlertDialog(
-            title: Text('删除'),
-            content: Text('是否删除$filename?'),
-            actions: [
-              FlatButton(
-                onPressed: close,
-                child: Text('取消'),
-              ),
-              FlatButton(
-                onPressed: () {
-                  this.minioController.removeFile(filename).then((_) {
-                    close();
-                    toast('删除成功');
-                    this.getBucketObjects(refresh: true);
-                  });
-                },
-                child: Text('删除'),
-              )
-            ],
-          );
-        });
+    showConfirmDialog(this.context,
+        title: '删除文件', content: Text('是否删除$filename?'), onConfirm: () {
+      this.minioController.removeFile(filename).then((_) {
+        toast('删除成功');
+        return this.getBucketObjects(refresh: true);
+      });
+    });
   }
 
   void _share(filename) async {

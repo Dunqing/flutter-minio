@@ -1,5 +1,6 @@
 import 'package:MinioClient/minio/DownloadController.dart';
 import 'package:MinioClient/minio/minio.dart';
+import 'package:MinioClient/pages/widgets/ConfirmDialog.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:MinioClient/widgets/TransferButton/TransferButton.dart';
 import 'package:MinioClient/widgets/drawer/drawer.dart';
@@ -145,37 +146,15 @@ class _MyHomePageState extends State<MyHomePage> {
     final bucket = this.buckets[index];
     return GestureDetector(
         onLongPress: () {
-          showDialog(
-              context: this.context,
-              builder: (context) {
-                close() {
-                  Navigator.of(context).pop();
-                }
-
-                return AlertDialog(
-                  title: Text('删除'),
-                  content: Text('是否删除${bucket.name}? bucket里面的所有文件都会被删除!'),
-                  actions: [
-                    FlatButton(
-                      onPressed: close,
-                      child: Text('取消'),
-                    ),
-                    FlatButton(
-                      onPressed: () {
-                        this
-                            .minioController
-                            .removeBucket(bucket.name)
-                            .then((_) {
-                          close();
-                          this.getBucketList();
-                          toast('删除成功');
-                        });
-                      },
-                      child: Text('删除'),
-                    )
-                  ],
-                );
-              });
+          showConfirmDialog(this.context,
+              title: '删除Bucket',
+              content: Text('是否删除${bucket.name}? bucket里面的所有文件都会被删除!'),
+              onConfirm: () {
+            this.minioController.removeBucket(bucket.name).then((_) {
+              this.getBucketList();
+              toast('删除成功');
+            });
+          });
         },
         child: ListTile(
           leading: Icon(Icons.folder),

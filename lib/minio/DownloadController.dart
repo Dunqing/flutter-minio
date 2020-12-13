@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:MinioClient/minio/minio.dart';
-import 'package:MinioClient/utils/utils.dart';
+import 'package:MinioClient/utils/file.dart';
 // ignore: unused_import
 import 'package:rxdart/rxdart.dart';
 import 'package:sqflite/sqflite.dart';
@@ -348,7 +348,6 @@ class DownloadController {
   // 重新下载
   Future<DownloadFileInstance> reDownload(DownloadFileInstance instance) async {
     this.downloadStream.add(this.downloadList);
-    await this.updateDownloadSize(instance, instance.downloadSize);
     this.scheduler.add(instance);
     return instance;
   }
