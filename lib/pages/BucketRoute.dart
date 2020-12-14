@@ -114,6 +114,7 @@ class _BucketRoute extends State<BucketRoute> {
                   ),
                   FlatButton(
                     onPressed: () async {
+                      Navigator.of(context).pop();
                       Navigator.of(context)
                           .push(MaterialPageRoute(builder: (context) {
                         return BucketRoute(
@@ -122,7 +123,7 @@ class _BucketRoute extends State<BucketRoute> {
                         );
                       }));
                     },
-                    child: Text('创建'),
+                    child: Text('跳转'),
                   )
                 ]);
           });
@@ -138,7 +139,8 @@ class _BucketRoute extends State<BucketRoute> {
             IconButton(
               icon: Icon(Icons.home),
               onPressed: () {
-                Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => true);
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/', (_) => false);
               },
             ),
             TransferButton(downloadController: this.downloadController)

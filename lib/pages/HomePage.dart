@@ -38,7 +38,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool showConfigButton = false;
 
-  String accessKey;
+  String _accessKey;
+
+  String _endPoint;
   _MyHomePageState() {
     this.minioController = MinioController();
   }
@@ -47,7 +49,10 @@ class _MyHomePageState extends State<MyHomePage> {
   initState() {
     super.initState();
     getConfigForKey('accessKey').then((key) {
-      this.accessKey = key;
+      this._accessKey = key;
+    });
+    getConfigForKey('endPoint').then((key) {
+      this._endPoint = key;
     });
     hasMinioConfig().then((value) {
       if (value) {
@@ -102,7 +107,8 @@ class _MyHomePageState extends State<MyHomePage> {
         actions: [TransferButton(downloadController: this.downloadController)],
       ),
       drawer: DrawerWidget(
-        accessKey: accessKey,
+        accessKey: _accessKey,
+        endPoint: _endPoint,
       ),
       body: Container(
         child: showConfigButton ? _renderConfigButton() : _renderListView(),
@@ -244,7 +250,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       secretKey: 'minio123');
 
                   Navigator.of(context).pushNamedAndRemoveUntil('/', (route) {
-                    return true;
+                    return false;
                   });
                 },
               ),

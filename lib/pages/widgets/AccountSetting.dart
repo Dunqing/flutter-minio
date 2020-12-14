@@ -158,7 +158,7 @@ class _AccountSettingState extends State<AccountSetting> {
     toast('保存成功');
     Navigator.of(context).pushNamedAndRemoveUntil('/', (route) {
       print(route);
-      return true;
+      return false;
     });
     print('$protocol $domain $port');
   }

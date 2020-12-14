@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:MinioClient/utils/file.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:minio/io.dart';
 import 'package:minio/minio.dart';
@@ -151,19 +150,12 @@ class MinioController {
     return this.minio.removeBucket(bucketName);
   }
 
-  Future<dynamic> getPartialObject(String bucketName, String filename,
-      {String filePath,
-      void onListen(int downloadSize, int fileSize),
+  Future<dynamic> getPartialObject(
+      String bucketName, String filename, String filePath,
+      {void onListen(int downloadSize, int fileSize),
       void onCompleted(int downloadSize, int fileSize),
       void onStart(StreamSubscription<List<int>> subscription)}) async {
-    print('getPartialObject $filename');
-
     final stat = await this.minio.statObject(bucketName, filename);
-
-    // 如果没设置文件路径则默认获取
-    if (filePath == null) {
-      filePath = await getDictionaryPath(filename: filename);
-    }
 
     final dir = dirname(filePath);
     await Directory(dir).create(recursive: true);

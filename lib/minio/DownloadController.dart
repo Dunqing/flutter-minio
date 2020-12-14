@@ -32,6 +32,7 @@ class DownloadController {
     getConfigForKey('downloadPath').then((path) {
       if (path != null) {
         DownloadController.downloadPath = path;
+        return;
       }
       // 设置下载路径
       getDictionaryPath().then((dir) {
@@ -134,7 +135,8 @@ class DownloadController {
 
     return this
         .minio
-        .getPartialObject(instance.bucketName, instance.filename,
+        .getPartialObject(
+            instance.bucketName, instance.filename, instance.filePath,
             onListen: _onListen, onCompleted: _onCompleted, onStart: _onStart)
         .catchError((err) {
       this.scheduler.removeErrorDownload(instance, err.toString());

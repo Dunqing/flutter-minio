@@ -67,7 +67,7 @@ launchURL(String url) async {
   }
 }
 
-permissionStorage() async {
+Future<void> permissionStorage() async {
   await Permission.storage.request().isGranted;
 }
 
