@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:MinioClient/db/DownloadDb.dart';
 import 'package:MinioClient/minio/minio.dart';
 import 'package:MinioClient/utils/file.dart';
+import 'package:MinioClient/utils/storage.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'DownloadFileInstance.dart';
@@ -19,7 +20,7 @@ class DownloadController {
   DownloadScheduler scheduler;
   MinioController minio;
   DownloadDb _db;
-  String dirPath;
+  static String downloadPath;
 
   DownloadController({this.minio}) {
     this._db = DownloadDb();
@@ -27,9 +28,15 @@ class DownloadController {
       this.initData();
     });
 
-    // 设置下载路径
-    getDictionaryPath().then((dir) {
-      this.dirPath = dir;
+    // 优先使用配置的路径
+    getConfigForKey('downloadPath').then((path) {
+      if (path != null) {
+        DownloadController.downloadPath = path;
+      }
+      // 设置下载路径
+      getDictionaryPath().then((dir) {
+        DownloadController.downloadPath = dir;
+      });
     });
   }
 
@@ -68,9 +75,8 @@ class DownloadController {
   }
 
   // 插入一条下载数据
-  Future<int> insert(
-      bucketName, filename, createAt, updateAt, fileSize, downloadSize) async {
-    final filePath = '${this.dirPath}/$filename';
+  Future<int> download(filePath, bucketName, filename, createAt, updateAt,
+      fileSize, downloadSize) async {
     final id = await this._db.insert(bucketName, filename, createAt, updateAt,
         fileSize, downloadSize, DownloadState.DOWNLOAD.index, filePath);
 

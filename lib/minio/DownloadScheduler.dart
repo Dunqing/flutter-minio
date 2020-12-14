@@ -12,10 +12,11 @@ class DownloadScheduler {
   PublishSubject<DownloadFileInstance> scheduler = PublishSubject();
   List<DownloadFileInstance> currentDownloadList = [];
   List<DownloadFileInstance> waitingDownloadList = [];
-  static const DOWNLODA_MAX_SIZE = 3;
+  static int downloadMaxSize = 3;
 
   // 是否超过限制下载数
-  bool get canDownload => this.currentDownloadList.length < DOWNLODA_MAX_SIZE;
+  bool get canDownload =>
+      this.currentDownloadList.length < DownloadScheduler.downloadMaxSize;
 
   // 停止下载 并不是给挤下去
   stopDownload(int index) {
@@ -81,9 +82,6 @@ class DownloadScheduler {
   // 删除下载
   removeDownload(instance) {
     this.currentDownloadList.remove(instance);
-    this
-        .downloadController
-        .updateDownloadState(instance, DownloadState.COMPLETED);
   }
 
   // 下载完毕后通知调度下载
@@ -92,13 +90,13 @@ class DownloadScheduler {
 
     print('当前还有几个要下载的 ${this.waitingDownloadList.length}');
     // 如果等待下载的已下完则结束运行
+
     if (this.waitingDownloadList.length == 0) {
       return;
     }
-
     final runInstance = this.waitingDownloadList.last;
     this.waitingDownloadList.remove(runInstance);
-    this.dispatchDownload(runInstance);
+    this.scheduler.add(runInstance);
   }
 
   // 触发下载

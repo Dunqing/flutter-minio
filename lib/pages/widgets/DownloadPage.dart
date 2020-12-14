@@ -135,7 +135,10 @@ class _DownloadPageState extends State<DownloadPage> {
               if (hasFileExists(current.filePath)) {
                 OpenFile.open(current.filePath);
               } else {
-                toastError('预览失败，下载的文件已被删除');
+                this.downloadController.updateDownloadState(
+                    current, DownloadState.ERROR,
+                    stateText: '预览失败，文件已失效，请重新下载');
+                // toastError('预览失败，下载的文件已被删除');
               }
             });
         break;

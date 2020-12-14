@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 byteToSize(int byte) {
@@ -85,27 +84,4 @@ isValidatorUrl(url) {
 getUrlInfo(url) {
   final value = getUrlRe().allMatches(url).first;
   return value;
-}
-
-Future<bool> hasMinioConfig() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString('accessKey')?.isNotEmpty == true &&
-      prefs.getString('secretKey')?.isNotEmpty == true &&
-      prefs.getString('endPoint')?.isNotEmpty == true;
-}
-
-Future<String> getAccessKey() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString('accessKey');
-}
-
-Future<void> setMinioConfig(
-    {useSSL, endPoint, port, url, accessKey, secretKey}) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  prefs.setBool('useSSL', useSSL);
-  prefs.setString('endPoint', endPoint);
-  prefs.setInt('port', port);
-  prefs.setString('inputUrl', url);
-  prefs.setString('accessKey', accessKey);
-  prefs.setString('secretKey', secretKey);
 }

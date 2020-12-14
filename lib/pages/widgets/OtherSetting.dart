@@ -1,4 +1,8 @@
+import 'package:MinioClient/minio/DownloadController.dart';
+import 'package:MinioClient/utils/file.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OtherSetting extends StatefulWidget {
   OtherSetting({Key key}) : super(key: key);
@@ -7,11 +11,151 @@ class OtherSetting extends StatefulWidget {
   _OtherSettingState createState() => _OtherSettingState();
 }
 
+enum MaxDownloadCount { One, Three, Five }
+
+int getMaxDownloadValue(MaxDownloadCount value) {
+  switch (value) {
+    case MaxDownloadCount.One:
+      return 1;
+    case MaxDownloadCount.Three:
+      return 3;
+    case MaxDownloadCount.Five:
+      return 5;
+    default:
+      return 3;
+  }
+}
+
 class _OtherSettingState extends State<OtherSetting> {
+  MaxDownloadCount _count = MaxDownloadCount.Three;
+  String _downloadPath = '';
+  SharedPreferences prefs;
+
+  @override
+  void initState() {
+    this.initSharedPreferences();
+    super.initState();
+  }
+
+  initSharedPreferences() async {
+    this.prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey('downloadCount')) {
+      this._count = MaxDownloadCount.values[prefs.getInt('downloadCount')];
+    }
+    print('获取下载地址');
+    if (prefs.containsKey('downloadPath')) {
+      setState(() {
+        this._downloadPath = prefs.getString('downloadPath');
+      });
+      return;
+    } else {
+      getDictionaryPath().then((path) {
+        print(path);
+        setState(() {
+          this._downloadPath = path;
+        });
+      });
+      return;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: Text('其他设置'),
+      padding: EdgeInsets.all(20),
+      constraints: BoxConstraints.expand(),
+      alignment: Alignment.center,
+      child: Column(
+        children: [..._renderDownloadCount(), ..._renderSelectDictionary()],
+      ),
     );
+  }
+
+  List<Widget> _renderDownloadCount() {
+    return [
+      Text('同时最多下载数量'),
+      Row(children: [
+        Expanded(
+            child: RadioListTile<MaxDownloadCount>(
+          title: Text('1个'),
+          value: MaxDownloadCount.One,
+          onChanged: _radioChanged,
+          groupValue: _count,
+        )),
+        Expanded(
+            child: RadioListTile<MaxDownloadCount>(
+          title: Text('3个'),
+          value: MaxDownloadCount.Three,
+          onChanged: _radioChanged,
+          groupValue: _count,
+        )),
+        Expanded(
+            child: RadioListTile(
+          title: Text('5个'),
+          value: MaxDownloadCount.Five,
+          onChanged: _radioChanged,
+          groupValue: _count,
+        )),
+      ])
+    ];
+  }
+
+  List<Widget> _renderSelectDictionary() {
+    return [
+      SizedBox(
+        height: 20,
+        child: null,
+      ),
+      Text('更换下载目录地址'),
+      Text(
+        '注意: 更改路径不会影响到更改之前下载的文件',
+        style: TextStyle(color: Colors.red, fontSize: 12),
+      ),
+      Row(
+        children: [
+          Expanded(
+            child: DecoratedBox(
+              decoration: BoxDecoration(border: Border.all(color: Colors.blue)),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SelectableText('$_downloadPath'),
+                ),
+              ),
+            ),
+          ),
+          FlatButton(
+            onPressed: _changeDownloadPath,
+            textColor: Colors.blue,
+            child: Text('更换地址'),
+          )
+        ],
+      )
+    ];
+  }
+
+  void _changeDownloadPath() async {
+    final path = await FilePicker.platform.getDirectoryPath();
+    prefs.setString('downloadPath', path);
+    // 更改下载地址的同时要修改正在运行的controller地址
+    DownloadController.downloadPath = path;
+
+    print(DownloadController.downloadPath);
+    setState(() {
+      _downloadPath = path;
+    });
+  }
+
+  _radioChanged(MaxDownloadCount value) {
+    if (_count == value) {
+      return;
+    }
+    // 更改下载地址的同时要修改正在运行的scheduler的最大数量
+    DownloadScheduler.downloadMaxSize = getMaxDownloadValue(value);
+    prefs.setInt('downloadCount', value.index);
+    setState(() {
+      _count = value;
+    });
   }
 }

@@ -31,6 +31,8 @@ class _BucketRoute extends State<BucketRoute> {
   MinioController minioController;
   DownloadController downloadController;
 
+  bool _showFloatingButton = true;
+
   initState() {
     super.initState();
     this.minioController =
@@ -91,6 +93,7 @@ class _BucketRoute extends State<BucketRoute> {
             ? _renderZeroContent()
             : Container(child: this._renderListObjects()),
         floatingActionButton: FloatingActionExtendButton(
+          visible: _showFloatingButton,
           animatedIcon: AnimatedIcons.menu_close,
           children: [
             FloatingActionExtendChild(
@@ -118,18 +121,47 @@ class _BucketRoute extends State<BucketRoute> {
     );
   }
 
+  _setFloatingButtonValue(value) {
+    if (value == this._showFloatingButton) {
+      return;
+    }
+    setState(() {
+      this._showFloatingButton = value;
+    });
+  }
+
   Widget _renderListObjects() {
-    return ListView.builder(
-      itemCount: this.bucketObjects.length,
-      itemBuilder: (context, index) {
-        final currentObj = this.bucketObjects[index];
-        // 是否为路径
-        return ListTileAnimation(
-            current: currentObj,
-            prefix: widget.prefix,
-            handleSelectMenu: this.handleSelectMenu,
-            bucketName: widget.bucketName);
+    double _value = 0;
+    double _maxValue = 0;
+    return NotificationListener<ScrollNotification>(
+      onNotification: (event) {
+        if (event is ScrollStartNotification) {
+          _value = event.metrics.pixels;
+          _maxValue = event.metrics.maxScrollExtent;
+        } else if (event is ScrollUpdateNotification) {
+          _value = event.metrics.pixels;
+          print(event.metrics.maxScrollExtent);
+        } else if (event is ScrollEndNotification) {
+          if (_value > _maxValue - 20) {
+            _setFloatingButtonValue(false);
+          } else {
+            _setFloatingButtonValue(true);
+          }
+        }
+        return true;
       },
+      child: ListView.builder(
+        itemCount: this.bucketObjects.length,
+        itemBuilder: (context, index) {
+          final currentObj = this.bucketObjects[index];
+          // 是否为路径
+          return ListTileAnimation(
+              current: currentObj,
+              prefix: widget.prefix,
+              handleSelectMenu: this.handleSelectMenu,
+              bucketName: widget.bucketName);
+        },
+      ),
     );
   }
 
@@ -203,9 +235,10 @@ class _BucketRoute extends State<BucketRoute> {
 
   void _download(Object obj) {
     final now = DateTime.now().millisecond;
+    final filePath = '${DownloadController.downloadPath}/${obj.key}';
     this
         .downloadController
-        .insert(widget.bucketName, obj.key, now, now, obj.size, 0);
+        .download(filePath, widget.bucketName, obj.key, now, now, obj.size, 0);
     // this.minioController.downloadFile(filename.key);
   }
 }

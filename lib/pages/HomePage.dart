@@ -1,6 +1,7 @@
 import 'package:MinioClient/minio/DownloadController.dart';
 import 'package:MinioClient/minio/minio.dart';
 import 'package:MinioClient/pages/widgets/ConfirmDialog.dart';
+import 'package:MinioClient/utils/storage.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:MinioClient/widgets/CenterContent/CenterContent.dart';
 import 'package:MinioClient/widgets/DialogLoading/DialogLoading.dart';
@@ -45,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   initState() {
     super.initState();
-    getAccessKey().then((key) {
+    getConfigForKey('accessKey').then((key) {
       this.accessKey = key;
     });
     hasMinioConfig().then((value) {
