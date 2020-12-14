@@ -125,14 +125,10 @@ class MinioController {
         .then((value) {});
   }
 
-  Future<String> uploadFile() async {
-    FilePickerResult result = await FilePicker.platform.pickFiles();
-    if (result == null || result?.files == null || result?.files?.length == 0) {
-      print('取消了上传');
-      return Future.error('cancel');
-    }
-    final file = result.files[0];
-    return minio.fPutObject(this.bucketName, file.name, file.path);
+  Future<List<String>> uploadFile(List<PlatformFile> files) async {
+    return Future.wait(files.map((file) {
+      return minio.fPutObject(this.bucketName, file.name, file.path);
+    }));
   }
 
   Future<String> presignedGetObject(String filename, {int expires}) {

@@ -8,6 +8,7 @@ import 'package:MinioClient/widgets/DialogLoading/DialogLoading.dart';
 import 'package:MinioClient/widgets/FloatingActionExtendButton/index.dart';
 import 'package:MinioClient/widgets/PreviewNetwork/preview_network.dart';
 import 'package:MinioClient/widgets/TransferButton/TransferButton.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:minio/models.dart';
@@ -56,8 +57,14 @@ class _BucketRoute extends State<BucketRoute> {
     });
   }
 
-  _uploadFile() {
-    this.minioController.uploadFile().then((string) {
+  _uploadFile() async {
+    FilePickerResult result = await FilePicker.platform.pickFiles();
+    if (result == null || result?.files == null || result?.files?.length == 0) {
+      print('取消了上传');
+      return Future.error('cancel');
+    }
+    List<PlatformFile> files = result.files;
+    this.minioController.uploadFile(files).then((string) {
       toast('上传成功');
       this.getBucketObjects(refresh: true);
     }).catchError((err) {
