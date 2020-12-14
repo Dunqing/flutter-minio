@@ -1,3 +1,4 @@
+import 'package:MinioClient/minio/minio.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -152,6 +153,7 @@ class _AccountSettingState extends State<AccountSetting> {
         accessKey: this._accessKey,
         secretKey: this._secretKey);
 
+    await MinioController.resetMinio();
     toast('保存成功');
     Navigator.of(context).pushNamedAndRemoveUntil('/', (route) {
       print(route);

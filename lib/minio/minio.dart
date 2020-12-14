@@ -56,8 +56,8 @@ class MinioController {
   String bucketName;
   String prefix;
 
-  static resetMinio() {
-    _resetMinio();
+  static resetMinio() async {
+    await _resetMinio();
   }
 
   /// maximum object size (5TB)
