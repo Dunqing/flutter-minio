@@ -57,9 +57,24 @@ class _LoopBoxLoadingState extends State<LoopBoxLoading> {
     return AnimatedBuilder(
         animation: this._animation,
         builder: (BuildContext context, Widget _) {
-          return Row(
+          return Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: this._renderChildren(),
+            children: [
+              if (widget.text != null)
+                Text(widget.text,
+                    style: TextStyle(
+                        color: Colors.white,
+                        decoration: TextDecoration.none,
+                        fontSize: 16)),
+              SizedBox(
+                child: null,
+                height: 20,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: this._renderChildren(),
+              ),
+            ],
           );
         });
   }

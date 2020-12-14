@@ -3,6 +3,8 @@ import 'package:MinioClient/minio/minio.dart';
 import 'package:MinioClient/pages/widgets/ConfirmDialog.dart';
 import 'package:MinioClient/pages/widgets/ShareDialog.dart';
 import 'package:MinioClient/utils/utils.dart';
+import 'package:MinioClient/widgets/CenterContent/CenterContent.dart';
+import 'package:MinioClient/widgets/DialogLoading/DialogLoading.dart';
 import 'package:MinioClient/widgets/FloatingActionExtendButton/index.dart';
 import 'package:MinioClient/widgets/PreviewNetwork/preview_network.dart';
 import 'package:MinioClient/widgets/TransferButton/TransferButton.dart';
@@ -38,6 +40,7 @@ class _BucketRoute extends State<BucketRoute> {
   }
 
   getBucketObjects({bool refresh = false}) async {
+    final closeLoading = await DialogLoading.showLoading();
     this
         .minioController
         .getBucketObjects(widget.bucketName, widget.prefix)
@@ -48,6 +51,7 @@ class _BucketRoute extends State<BucketRoute> {
       setState(() {
         this.bucketObjects.addAll(res['prefixes']);
         this.bucketObjects.addAll(res['objests']);
+        closeLoading();
       });
     });
   }
@@ -67,20 +71,44 @@ class _BucketRoute extends State<BucketRoute> {
         appBar: AppBar(
           title: Text(widget.bucketName ?? '所有bucket'),
           actions: [
+            IconButton(
+              icon: Icon(Icons.home),
+              onPressed: () {
+                Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => true);
+              },
+            ),
             TransferButton(downloadController: this.downloadController)
           ],
         ),
-        body: Container(child: this._renderListObjects()),
+        body: this.bucketObjects.length == 0
+            ? _renderZeroContent()
+            : Container(child: this._renderListObjects()),
         floatingActionButton: FloatingActionExtendButton(
           animatedIcon: AnimatedIcons.menu_close,
           children: [
-            if (widget.bucketName != null)
-              FloatingActionExtendChild(
-                  onTap: _uploadFile,
-                  label: '上传文件',
-                  child: Icon(Icons.upload_file)),
+            FloatingActionExtendChild(
+                onTap: _uploadFile,
+                label: '上传文件',
+                child: Icon(Icons.upload_file)),
           ],
         ));
+  }
+
+  Widget _renderZeroContent() {
+    return CenterContent(
+      children: [
+        Text(
+          '还没有上传数据，赶紧来上传吧！',
+          style: TextStyle(fontSize: 16),
+        ),
+        RaisedButton(
+          onPressed: _uploadFile,
+          color: Colors.blue,
+          textColor: Colors.white,
+          child: Text('文件上传'),
+        )
+      ],
+    );
   }
 
   Widget _renderListObjects() {
@@ -133,7 +161,15 @@ class _BucketRoute extends State<BucketRoute> {
   }
 
   void _share(filename) async {
-    final url = await this.minioController.presignedGetObject(filename);
+    Future<String> getUrl({int day = 5, hours = 0, minutes = 0}) {
+      final expires = day * 60 * 24 * 60 + hours * 60 * 60 + minutes * 60;
+      return this
+          .minioController
+          .presignedGetObject(filename, expires: expires);
+    }
+
+    final String url = await getUrl();
+
     showDialog(
         context: this.context,
         builder: (BuildContext context) {
@@ -141,11 +177,7 @@ class _BucketRoute extends State<BucketRoute> {
               child: ShareDialog(
                   url: url,
                   copyLink: (int day, int hours, int minutes) {
-                    final expires =
-                        day * 60 * 24 * 60 + hours * 60 * 60 + minutes * 60;
-                    this
-                        .minioController
-                        .presignedGetObject(filename, expires: expires)
+                    getUrl(day: day, hours: hours, minutes: minutes)
                         .then((url) {
                       Clipboard.setData(ClipboardData(text: url));
                       Navigator.of(context).pop();
@@ -153,11 +185,7 @@ class _BucketRoute extends State<BucketRoute> {
                     });
                   },
                   shareLink: (int day, int hours, int minutes) {
-                    final expires =
-                        day * 60 * 24 * 60 + hours * 60 * 60 + minutes * 60;
-                    this
-                        .minioController
-                        .presignedGetObject(filename, expires: expires)
+                    getUrl(day: day, hours: hours, minutes: minutes)
                         .then((url) {
                       Share.share('Click $url download',
                           subject: 'Share you $filename');

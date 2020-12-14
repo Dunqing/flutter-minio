@@ -129,7 +129,7 @@ class MinioController {
     FilePickerResult result = await FilePicker.platform.pickFiles();
     if (result == null || result?.files == null || result?.files?.length == 0) {
       print('取消了上传');
-      return 'cancel';
+      return Future.error('cancel');
     }
     final file = result.files[0];
     return minio.fPutObject(this.bucketName, file.name, file.path);

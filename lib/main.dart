@@ -1,8 +1,10 @@
+import 'package:MinioClient/utils/global.dart';
 import 'package:flutter/material.dart';
 
 import 'pages/index.dart';
 
 void main() {
+  SignleInstance.registerInstance('GlobalContext', GlobalKey<NavigatorState>());
   runApp(MyApp());
 }
 
@@ -12,6 +14,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Minio For Flutter',
+      navigatorKey: SignleInstance.getInstance<GlobalKey<NavigatorState>>(
+          'GlobalContext'),
       theme: ThemeData(
         // This is the theme of your application.
         //

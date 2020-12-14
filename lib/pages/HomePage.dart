@@ -2,6 +2,8 @@ import 'package:MinioClient/minio/DownloadController.dart';
 import 'package:MinioClient/minio/minio.dart';
 import 'package:MinioClient/pages/widgets/ConfirmDialog.dart';
 import 'package:MinioClient/utils/utils.dart';
+import 'package:MinioClient/widgets/CenterContent/CenterContent.dart';
+import 'package:MinioClient/widgets/DialogLoading/DialogLoading.dart';
 import 'package:MinioClient/widgets/TransferButton/TransferButton.dart';
 import 'package:MinioClient/widgets/drawer/drawer.dart';
 import 'package:flutter/material.dart';
@@ -61,10 +63,12 @@ class _MyHomePageState extends State<MyHomePage> {
         createDownloadInstance(minio: this.minioController);
   }
 
-  getBucketList() {
+  getBucketList() async {
+    final closeLoadding = await DialogLoading.showLoading();
     this.minioController.getListBuckets().then((value) {
       this.setState(() {
         this.buckets = value;
+        closeLoadding();
       });
     });
   }
@@ -198,52 +202,47 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _renderConfigButton() {
-    return Container(
-      alignment: Alignment.center,
-      constraints: BoxConstraints.expand(),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text('你还没有配置账号信息，赶紧去配置吧',
-              style: TextStyle(color: Colors.red, fontSize: 18)),
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                RaisedButton(
-                  color: Colors.blue,
-                  textColor: Colors.white,
-                  child: Text('前往配置'),
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('Setting');
-                  },
-                ),
-                SizedBox(
-                  child: null,
-                  width: 20,
-                ),
-                RaisedButton(
-                  color: Colors.blue,
-                  textColor: Colors.white,
-                  child: Text('设置公用账号'),
-                  onPressed: () async {
-                    await setMinioConfig(
-                        endPoint: 'play.min.io',
-                        url: 'https://play.min.io',
-                        accessKey: 'minio',
-                        secretKey: 'minio123');
+    return CenterContent(
+      children: [
+        Text('你还没有配置账号信息，赶紧去配置吧！',
+            style: TextStyle(color: Colors.red, fontSize: 16)),
+        Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              RaisedButton(
+                color: Colors.blue,
+                textColor: Colors.white,
+                child: Text('前往配置'),
+                onPressed: () {
+                  Navigator.of(context).pushNamed('Setting');
+                },
+              ),
+              SizedBox(
+                child: null,
+                width: 20,
+              ),
+              RaisedButton(
+                color: Colors.blue,
+                textColor: Colors.white,
+                child: Text('设置公用账号'),
+                onPressed: () async {
+                  await setMinioConfig(
+                      endPoint: 'play.min.io',
+                      url: 'https://play.min.io',
+                      accessKey: 'minio',
+                      secretKey: 'minio123');
 
-                    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) {
-                      return true;
-                    });
-                  },
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
+                  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) {
+                    return true;
+                  });
+                },
+              ),
+            ],
+          ),
+        )
+      ],
     );
   }
 }
