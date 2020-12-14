@@ -24,7 +24,7 @@ class DownloadDb {
 
   insert(bucketName, filename, createAt, updateAt, fileSize, downloadSize,
       int state, filePath) {
-    this._database.rawInsert(
+    return this._database.rawInsert(
         'INSERT INTO DownloadLog (bucketName, filename, createAt, updateAt, fileSize, downloadSize, state, stateText, filePath) VALUES(?, ?, ?, ?, ?, ?, ?, "", ?)',
         [
           bucketName,
