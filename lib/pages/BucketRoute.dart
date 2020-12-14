@@ -12,7 +12,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:minio/models.dart';
-import 'package:path/path.dart' show join;
+import 'package:path/path.dart' show basename, dirname, join;
 import 'package:share/share.dart';
 
 import 'widgets/ListTileAnimation.dart';
@@ -67,11 +67,16 @@ class _BucketRoute extends State<BucketRoute> {
       return Future.error('cancel');
     }
     List<PlatformFile> files = result.files;
-    this.minioController.uploadFile(files).then((string) {
-      toast('上传成功');
-      this.getBucketObjects(refresh: true);
-    }).catchError((err) {
-      toastError(err?.message ?? err.toString());
+    files.forEach((file) {
+      final filename = join(widget.prefix, file.name);
+      print('上传filename');
+      print(filename);
+      this.minioController.uploadFile(filename, file.path).then((string) {
+        toast('上传成功');
+        this.getBucketObjects(refresh: true);
+      }).catchError((err) {
+        toastError(err?.message ?? err.toString());
+      });
     });
   }
 

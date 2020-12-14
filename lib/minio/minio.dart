@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:MinioClient/utils/file.dart';
 import 'package:MinioClient/utils/utils.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:minio/io.dart';
 import 'package:minio/minio.dart';
 import 'package:minio/models.dart';
@@ -125,10 +124,8 @@ class MinioController {
         .then((value) {});
   }
 
-  Future<List<String>> uploadFile(List<PlatformFile> files) async {
-    return Future.wait(files.map((file) {
-      return minio.fPutObject(this.bucketName, file.name, file.path);
-    }));
+  Future<String> uploadFile(String filename, String filePath) async {
+    return minio.fPutObject(this.bucketName, filename, filePath);
   }
 
   Future<String> presignedGetObject(String filename, {int expires}) {
