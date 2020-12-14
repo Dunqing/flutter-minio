@@ -12,6 +12,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:minio/models.dart';
+import 'package:path/path.dart' show join;
 import 'package:share/share.dart';
 
 import 'widgets/ListTileAnimation.dart';
@@ -74,6 +75,55 @@ class _BucketRoute extends State<BucketRoute> {
     });
   }
 
+  _jumpPrefix() async {
+    showDialog(
+        context: this.context,
+        builder: (context) {
+          close() {
+            Navigator.of(context).pop(true);
+          }
+
+          String prefix = widget.prefix;
+          final _controller = TextEditingController(text: prefix);
+          return StatefulBuilder(
+              builder: (BuildContext twoContext, StateSetter setState) {
+            return AlertDialog(
+                title: Title(
+                  color: Color(0xff333333),
+                  child: Text('跳转路径'),
+                ),
+                content: TextField(
+                  controller: _controller,
+                  autofocus: true,
+                  textAlign: TextAlign.center,
+                  onChanged: (value) {
+                    setState(() {
+                      prefix = value;
+                    });
+                  },
+                ),
+                actions: [
+                  FlatButton(
+                    onPressed: close,
+                    child: Text('取消'),
+                  ),
+                  FlatButton(
+                    onPressed: () async {
+                      Navigator.of(context)
+                          .push(MaterialPageRoute(builder: (context) {
+                        return BucketRoute(
+                          bucketName: widget.bucketName,
+                          prefix: join(widget.prefix, prefix),
+                        );
+                      }));
+                    },
+                    child: Text('创建'),
+                  )
+                ]);
+          });
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,17 +139,83 @@ class _BucketRoute extends State<BucketRoute> {
             TransferButton(downloadController: this.downloadController)
           ],
         ),
-        body: this.bucketObjects.length == 0
-            ? _renderZeroContent()
-            : Container(child: this._renderListObjects()),
+        body: _renderRoot(),
         floatingActionButton: FloatingActionExtendButton(
           visible: _showFloatingButton,
           animatedIcon: AnimatedIcons.menu_close,
           children: [
             FloatingActionExtendChild(
+                onTap: _jumpPrefix,
+                label: '跳转路径',
+                child: Icon(Icons.exit_to_app)),
+            FloatingActionExtendChild(
                 onTap: _uploadFile,
                 label: '上传文件',
                 child: Icon(Icons.upload_file)),
+          ],
+        ));
+  }
+
+  Widget _renderBreadcrumbs() {
+    final _prefix = widget.prefix.split('/');
+    final style = TextStyle(fontSize: 20);
+    final activeStyle = TextStyle(fontSize: 20, color: Colors.blue);
+    List<Widget> _prefixs = [];
+    for (var i = 0; i < _prefix.length; i++) {
+      final item = _prefix[i];
+      if (_prefix[i].isEmpty) {
+        continue;
+      }
+
+      final index = _prefix[_prefix.length - 1].isEmpty ? 2 : 1;
+
+      _prefixs.add(
+          Text(item, style: i == _prefix.length - index ? activeStyle : style));
+      if (i < _prefix.length - index) {
+        _prefixs.add(Icon(Icons.navigate_next));
+      }
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      child: Row(
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.alt_route,
+                  size: 20,
+                ),
+                SizedBox(
+                  width: 10,
+                  child: null,
+                ),
+                ..._prefixs
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _renderRoot() {
+    return Container(
+        constraints: BoxConstraints.expand(),
+        child: Column(
+          children: [
+            if (widget.prefix != '') ...[
+              _renderBreadcrumbs(),
+              Divider(
+                height: 1,
+              ),
+            ],
+            Expanded(
+              child: this.bucketObjects.length == 0
+                  ? _renderZeroContent()
+                  : this._renderListObjects(),
+            ),
           ],
         ));
   }
@@ -142,6 +258,10 @@ class _BucketRoute extends State<BucketRoute> {
           _value = event.metrics.pixels;
           print(event.metrics.maxScrollExtent);
         } else if (event is ScrollEndNotification) {
+          // 排除无法滚动的情况
+          if (_value == 0.0 && _maxValue == 0.0) {
+            return false;
+          }
           if (_value > _maxValue - 20) {
             _setFloatingButtonValue(false);
           } else {

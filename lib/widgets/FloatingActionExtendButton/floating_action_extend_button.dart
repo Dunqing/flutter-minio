@@ -125,7 +125,10 @@ class _FloatingActionExtendButtonState extends State<FloatingActionExtendButton>
         child: child.child,
         elevation: child.elevation,
         backgroundColor: child.backgroundColor,
-        onTap: child.onTap,
+        onTap: () {
+          child.onTap();
+          this._toggleChildren();
+        },
         label: child.label,
         labelWidget: child.labelWidget,
         labelStyle: child.labelStyle,

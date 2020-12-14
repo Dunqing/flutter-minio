@@ -185,27 +185,26 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _renderBucket(index) {
     final bucket = this.buckets[index];
-    return GestureDetector(
-        onLongPress: () {
-          showConfirmDialog(this.context,
-              title: '删除Bucket',
-              content: Text('是否删除${bucket.name}? bucket里面的所有文件都会被删除!'),
-              onConfirm: () {
-            this.minioController.removeBucket(bucket.name).then((_) {
-              this.getBucketList();
-              toast('删除成功');
-            });
+    return ListTile(
+      leading: Icon(Icons.folder),
+      title: Text(bucket.name),
+      trailing: new Icon(Icons.navigate_next, color: Colors.blueGrey),
+      onLongPress: () {
+        showConfirmDialog(this.context,
+            title: '删除Bucket',
+            content: Text('是否删除${bucket.name}? bucket里面的所有文件都会被删除!'),
+            onConfirm: () {
+          this.minioController.removeBucket(bucket.name).then((_) {
+            this.getBucketList();
+            toast('删除成功');
           });
-        },
-        child: ListTile(
-          leading: Icon(Icons.folder),
-          title: Text(bucket.name),
-          trailing: new Icon(Icons.navigate_next, color: Colors.blueGrey),
-          onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => BucketRoute(bucketName: bucket.name)));
-          },
-        ));
+        });
+      },
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => BucketRoute(bucketName: bucket.name)));
+      },
+    );
   }
 
   Widget _renderConfigButton() {
