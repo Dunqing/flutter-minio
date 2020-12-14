@@ -70,6 +70,12 @@ class _MyHomePageState extends State<MyHomePage> {
         this.buckets = value;
         closeLoadding();
       });
+    }).catchError((err) {
+      closeLoadding();
+      toastError(err.toString());
+      setState(() {
+        this.showConfigButton = true;
+      });
     });
   }
 
@@ -204,7 +210,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _renderConfigButton() {
     return CenterContent(
       children: [
-        Text('你还没有配置账号信息，赶紧去配置吧！',
+        Text('你还没有配置账号信息或配置的账号有误，赶紧去配置吧！',
+            textAlign: TextAlign.center,
             style: TextStyle(color: Colors.red, fontSize: 16)),
         Padding(
           padding: const EdgeInsets.only(top: 8.0),

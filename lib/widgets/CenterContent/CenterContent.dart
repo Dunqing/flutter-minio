@@ -7,6 +7,7 @@ class CenterContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: EdgeInsets.all(20),
       alignment: Alignment.center,
       constraints: BoxConstraints.expand(),
       child: Column(
