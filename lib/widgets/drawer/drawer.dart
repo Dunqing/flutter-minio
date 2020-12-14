@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 
 class DrawerWidget extends StatelessWidget {
   final String accessKey;
-  const DrawerWidget({Key key, this.accessKey = '你还未设置'}) : super(key: key);
+  final String endPoint;
+  const DrawerWidget(
+      {Key key, this.accessKey = '你还未设置', this.endPoint = '你还未设置'})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +34,7 @@ class DrawerWidget extends StatelessWidget {
                   height: 60,
                 )),
                 Padding(
-                  padding: const EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     'Minio For Flutter',
                     style: TextStyle(
@@ -40,8 +43,15 @@ class DrawerWidget extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text('Access Key: $accessKey'),
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    'Access key: $accessKey',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+                Text(
+                  'End point: $endPoint',
+                  style: TextStyle(fontSize: 12),
                 ),
               ],
             ),

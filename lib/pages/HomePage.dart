@@ -193,10 +193,12 @@ class _MyHomePageState extends State<MyHomePage> {
         showConfirmDialog(this.context,
             title: '删除Bucket',
             content: Text('是否删除${bucket.name}? bucket里面的所有文件都会被删除!'),
-            onConfirm: () {
+            onConfirm: () async {
           this.minioController.removeBucket(bucket.name).then((_) {
-            this.getBucketList();
             toast('删除成功');
+            this.getBucketList();
+          }).catchError((err) {
+            toastError(err.toString());
           });
         });
       },

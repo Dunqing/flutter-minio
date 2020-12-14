@@ -32,7 +32,7 @@ class DialogLoading {
     closeLoading() {
       final context = _loading[key];
       _loading.remove(key);
-      Navigator.of(context).pop();
+      Navigator.of(context ?? _context).pop();
     }
 
     return closeLoading;
