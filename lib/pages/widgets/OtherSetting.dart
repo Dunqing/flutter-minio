@@ -66,7 +66,15 @@ class _OtherSettingState extends State<OtherSetting> {
       constraints: BoxConstraints.expand(),
       alignment: Alignment.center,
       child: Column(
-        children: [..._renderDownloadCount(), ..._renderSelectDictionary()],
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ..._renderDownloadCount(),
+          SizedBox(
+            height: 40,
+            child: null,
+          ),
+          ..._renderSelectDictionary()
+        ],
       ),
     );
   }
@@ -74,38 +82,34 @@ class _OtherSettingState extends State<OtherSetting> {
   List<Widget> _renderDownloadCount() {
     return [
       Text('同时最多下载数量'),
-      Row(children: [
-        Expanded(
-            child: RadioListTile<MaxDownloadCount>(
-          title: Text('1个'),
+      Column(children: [
+        RadioListTile<MaxDownloadCount>(
+          title: Text(
+            '1个',
+            textAlign: TextAlign.right,
+          ),
           value: MaxDownloadCount.One,
           onChanged: _radioChanged,
           groupValue: _count,
-        )),
-        Expanded(
-            child: RadioListTile<MaxDownloadCount>(
-          title: Text('3个'),
+        ),
+        RadioListTile<MaxDownloadCount>(
+          title: Text('3个', textAlign: TextAlign.right),
           value: MaxDownloadCount.Three,
           onChanged: _radioChanged,
           groupValue: _count,
-        )),
-        Expanded(
-            child: RadioListTile(
-          title: Text('5个'),
+        ),
+        RadioListTile(
+          title: Text('5个', textAlign: TextAlign.right),
           value: MaxDownloadCount.Five,
           onChanged: _radioChanged,
           groupValue: _count,
-        )),
+        ),
       ])
     ];
   }
 
   List<Widget> _renderSelectDictionary() {
     return [
-      SizedBox(
-        height: 20,
-        child: null,
-      ),
       Text('更换下载目录地址'),
       Text(
         '注意: 更改路径不会影响到更改之前下载的文件',

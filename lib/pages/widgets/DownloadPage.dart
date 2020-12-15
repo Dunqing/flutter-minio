@@ -4,6 +4,7 @@ import 'package:MinioClient/utils/file.dart';
 import 'package:MinioClient/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
+import 'package:path/path.dart' show basename;
 import 'package:rxdart/rxdart.dart';
 
 class DownloadPage extends StatefulWidget {
@@ -57,7 +58,7 @@ class _DownloadPageState extends State<DownloadPage> {
                     itemCount: data.length,
                     itemBuilder: (context, index) {
                       final current = data[index];
-                      final filename = current.filename.split('/').last;
+                      final filename = basename(current.filename);
                       return Column(
                         children: [
                           ListTile(

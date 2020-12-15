@@ -210,7 +210,6 @@ class MinioController {
     if (localStat.size != stat.size) {
       throw MinioError('Size mismatch between downloaded file and the object');
     }
-    toast('下载完成 $filename');
     return rename();
   }
 }

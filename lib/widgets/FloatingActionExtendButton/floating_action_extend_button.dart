@@ -110,6 +110,10 @@ class _FloatingActionExtendButtonState extends State<FloatingActionExtendButton>
   }
 
   List<Widget> _getChildrenList() {
+    if (!widget.visible) {
+      return [];
+    }
+
     final singleChildrenTween = 1.0 / widget.children.length;
 
     return widget.children.map((FloatingActionExtendChild child) {

@@ -4,6 +4,8 @@ import 'package:MinioClient/db/DownloadDb.dart';
 import 'package:MinioClient/minio/minio.dart';
 import 'package:MinioClient/utils/file.dart';
 import 'package:MinioClient/utils/storage.dart';
+import 'package:MinioClient/utils/utils.dart';
+import 'package:path/path.dart' show basename;
 import 'package:rxdart/rxdart.dart';
 
 import 'DownloadFileInstance.dart';
@@ -124,6 +126,8 @@ class DownloadController {
 
     _onCompleted(downloadSize, fileSize) {
       print('completed currentSize $downloadSize || fileSize $fileSize');
+      final filename = basename(instance.filename);
+      toast('下载完成 $filename');
       this.updateDownloadSize(instance, instance.downloadSize);
       this.updateDownloadState(instance, DownloadState.COMPLETED);
       this.scheduler.notify(instance);
