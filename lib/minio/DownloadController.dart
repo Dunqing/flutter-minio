@@ -80,6 +80,7 @@ class DownloadController {
   // 插入一条下载数据
   Future<int> download(filePath, bucketName, filename, createAt, updateAt,
       fileSize, downloadSize) async {
+    await permissionStorage();
     final id = await this._db.insert(bucketName, filename, createAt, updateAt,
         fileSize, downloadSize, DownloadState.DOWNLOAD.index, filePath);
 

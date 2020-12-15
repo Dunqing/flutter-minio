@@ -1,5 +1,6 @@
 import 'package:MinioClient/minio/DownloadController.dart';
 import 'package:MinioClient/utils/file.dart';
+import 'package:MinioClient/utils/utils.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -140,6 +141,7 @@ class _OtherSettingState extends State<OtherSetting> {
   }
 
   void _changeDownloadPath() async {
+    await permissionStorage();
     final path = await FilePicker.platform.getDirectoryPath();
     prefs.setString('downloadPath', path);
     // 更改下载地址的同时要修改正在运行的controller地址
