@@ -28,7 +28,6 @@ class DialogLoading {
               constraints: BoxConstraints.expand(),
               alignment: Alignment.center);
         });
-
     closeLoading() {
       final context = _loading[key];
       _loading.remove(key);
@@ -36,6 +35,10 @@ class DialogLoading {
     }
 
     return closeLoading;
+  }
+
+  static dynamic howLoading2() {
+    Overlay();
   }
 
   static closeLoading() {}

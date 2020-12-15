@@ -31,16 +31,43 @@ class _BucketRoute extends State<BucketRoute> {
   List<dynamic> bucketObjects = [];
   MinioController minioController;
   DownloadController downloadController;
-
   bool _showFloatingButton = true;
+  ScrollController _listViewController = ScrollController();
 
+  @override
   initState() {
     super.initState();
+    this.initPrefixScroll();
     this.minioController =
         MinioController(bucketName: widget.bucketName, prefix: widget.prefix);
     this.downloadController =
         createDownloadInstance(minio: this.minioController);
     this.getBucketObjects();
+  }
+
+  /// 初始化prefix的滚动条
+  initPrefixScroll() async {
+    await Future.delayed(Duration.zero);
+    try {
+      if (this._listViewController?.position?.maxScrollExtent == null) {
+        return;
+      }
+    } catch (err) {
+      if (!this._listViewController.hasClients) {
+        return;
+      }
+      return;
+    }
+    this._listViewController.animateTo(
+        this._listViewController.position.maxScrollExtent,
+        curve: Curves.linear,
+        duration: Duration(milliseconds: 300));
+  }
+
+  @override
+  void dispose() {
+    this._listViewController.dispose();
+    super.dispose();
   }
 
   getBucketObjects({bool refresh = false}) async {
@@ -57,6 +84,10 @@ class _BucketRoute extends State<BucketRoute> {
         this.bucketObjects.addAll(res['objests']);
         closeLoading();
       });
+    }).catchError((err) {
+      closeLoading();
+      toastError(err.toString());
+      print(err);
     });
   }
 
@@ -102,6 +133,10 @@ class _BucketRoute extends State<BucketRoute> {
                   autofocus: true,
                   textAlign: TextAlign.center,
                   onChanged: (value) {
+                    // 重复忽略
+                    if (value == prefix) {
+                      return;
+                    }
                     setState(() {
                       prefix = value;
                     });
@@ -114,12 +149,37 @@ class _BucketRoute extends State<BucketRoute> {
                   ),
                   FlatButton(
                     onPressed: () async {
+                      if (prefix == widget.prefix) {
+                        toast('当前已在此路径上');
+                        return;
+                      }
+
+                      /// 加入此判断是用户以这个功能往会跳
+                      /// 比如 /123/234 到 /123 那应该替换路由
+                      if (prefix.length < widget.prefix.length) {
+                        print('往回跳');
+                        Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (context) {
+                          return BucketRoute(
+                            bucketName: widget.bucketName,
+
+                            /// fix: 如果不补充此斜杠，上传文件后
+                            /// 需要主动跳转到当前目录下的/路径下才能看见上传的文件
+                            prefix:
+                                prefix.endsWith('/') ? prefix : prefix + '/',
+                          );
+                        }));
+                        return;
+                      }
                       Navigator.of(context).pop();
                       Navigator.of(context)
                           .push(MaterialPageRoute(builder: (context) {
                         return BucketRoute(
                           bucketName: widget.bucketName,
-                          prefix: join(widget.prefix, prefix),
+
+                          /// fix: 如果不补充此斜杠，上传文件后
+                          /// 需要主动跳转到当前目录下的/路径下才能看见上传的文件
+                          prefix: prefix.endsWith('/') ? prefix : prefix + '/',
                         );
                       }));
                     },
@@ -176,32 +236,30 @@ class _BucketRoute extends State<BucketRoute> {
 
       final index = _prefix[_prefix.length - 1].isEmpty ? 2 : 1;
 
-      _prefixs.add(
-          Text(item, style: i == _prefix.length - index ? activeStyle : style));
+      _prefixs.add(Center(
+          child: Text(item,
+              style: i == _prefix.length - index ? activeStyle : style)));
       if (i < _prefix.length - index) {
         _prefixs.add(Icon(Icons.navigate_next));
       }
     }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-      child: Row(
+    return Container(
+      alignment: Alignment.center,
+      constraints: BoxConstraints.expand(height: 50),
+      child: ListView(
+        controller: _listViewController,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
         children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                Icon(
-                  Icons.alt_route,
-                  size: 20,
-                ),
-                SizedBox(
-                  width: 10,
-                  child: null,
-                ),
-                ..._prefixs
-              ],
-            ),
-          )
+          Icon(
+            Icons.alt_route,
+            size: 20,
+          ),
+          SizedBox(
+            width: 10,
+            child: null,
+          ),
+          ..._prefixs
         ],
       ),
     );

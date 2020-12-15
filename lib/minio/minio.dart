@@ -45,6 +45,7 @@ Future<Minio> _resetMinio() async {
     );
   } catch (err) {
     toastError(err.toString());
+    return Future.error(err);
   }
   return _minio;
 }
