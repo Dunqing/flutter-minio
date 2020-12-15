@@ -243,11 +243,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text('设置公用账号'),
                 onPressed: () async {
                   await setMinioConfig(
+                      useSSL: true,
                       endPoint: 'play.min.io',
                       url: 'https://play.min.io',
                       accessKey: 'minio',
                       secretKey: 'minio123');
 
+                  /// fix 使用的账号还是旧的bug
+                  await MinioController.resetMinio();
                   Navigator.of(context).pushNamedAndRemoveUntil('/', (route) {
                     return false;
                   });
