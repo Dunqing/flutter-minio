@@ -63,7 +63,7 @@ class DownloadController {
           data['fileSize'],
           data['downloadSize'],
           state: stateValues[data['state']],
-          stateText: data['Text'],
+          stateText: data['stateText'],
           filePath: data['filePath'],
         );
         list.add(instance);
