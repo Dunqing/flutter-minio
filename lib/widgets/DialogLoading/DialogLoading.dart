@@ -8,7 +8,7 @@ final _context =
         .currentContext;
 
 class DialogLoading {
-  static Future<VoidCallback> showLoading() async {
+  static Future<VoidCallback> showLoadingBk() async {
     final key = UniqueKey();
     await Future.delayed(Duration.zero);
     showDialog(
@@ -37,8 +37,28 @@ class DialogLoading {
     return closeLoading;
   }
 
-  static dynamic howLoading2() {
-    Overlay();
+  static dynamic showLoading(BuildContext context) {
+    final OverlayEntry _entry = OverlayEntry(builder: (context) {
+      return Container(
+          decoration: BoxDecoration(color: Color.fromARGB(88, 0, 0, 0)),
+          child: Loading(
+            milliseconds: 1000,
+            child: LoopBoxLoading(
+              text: '拼命加载中...',
+            ),
+          ),
+          constraints: BoxConstraints.expand(),
+          alignment: Alignment.center);
+    });
+
+    /// fix 渲染bug
+    Future.delayed(Duration.zero).then((_) {
+      Overlay.of(context, rootOverlay: true).insert(_entry);
+    });
+
+    return () {
+      _entry.remove();
+    };
   }
 
   static closeLoading() {}

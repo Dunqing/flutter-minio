@@ -71,7 +71,7 @@ class _BucketRoute extends State<BucketRoute> {
   }
 
   getBucketObjects({bool refresh = false}) async {
-    final closeLoading = await DialogLoading.showLoading();
+    final closeLoading = DialogLoading.showLoading(this.context);
     this
         .minioController
         .getBucketObjects(widget.bucketName, widget.prefix)
@@ -83,6 +83,7 @@ class _BucketRoute extends State<BucketRoute> {
         this.bucketObjects.addAll(res['prefixes']);
         this.bucketObjects.addAll(res['objests']);
         closeLoading();
+        // closeLoading();
       });
     }).catchError((err) {
       closeLoading();

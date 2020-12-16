@@ -44,8 +44,8 @@ class _LoopBoxLoadingState extends State<LoopBoxLoading> {
               margin: EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
                 color: this._animation.value.toInt() == index
-                    ? Colors.white
-                    : Colors.grey,
+                    ? Colors.blue
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(2),
               ),
             ))

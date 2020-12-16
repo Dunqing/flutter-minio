@@ -70,7 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   getBucketList() async {
-    final closeLoadding = await DialogLoading.showLoading();
+    final closeLoadding = await DialogLoading.showLoading(context);
     this.minioController.getListBuckets().then((value) {
       this.setState(() {
         this.buckets = value;
@@ -157,19 +157,24 @@ class _MyHomePageState extends State<MyHomePage> {
                       try {
                         MinioInvalidBucketNameError.check(bucketName);
                       } catch (e) {
-                        toast('请正确填写bucket name！');
+                        toastError('请正确填写bucket name！');
                         return;
                       }
                       final hasExists =
                           await this.minioController.buckerExists(bucketName);
                       if (hasExists) {
-                        toast('bucket已存在');
+                        toastError('bucket已存在');
                         return;
                       }
+                      final closeLoading = DialogLoading.showLoading(context);
                       this.minioController.createBucket(bucketName).then((_) {
                         toast('创建成功');
                         close();
+                        closeLoading();
                         this.getBucketList();
+                      }).catchError((err) {
+                        toastError(err);
+                        closeLoading();
                       });
                     },
                     child: Text('创建'),
