@@ -240,17 +240,24 @@ class _DownloadPageState extends State<DownloadPage> {
         break;
       case MenuButtonMethod.Delete:
         print('删除');
-        this
-            .downloadController
-            .deleteDownload(this.selectingValues.values.toList());
         Future.delayed(Duration.zero).then((_) {
-          widget.changeSelecting(false);
+          showConfirmDialog(this.context,
+              title: '删除文件',
+              content: Text('删除所选的文件且包括已下载的文件'), onConfirm: () async {
+            this
+                .downloadController
+                .deleteDownload(this.selectingValues.values.toList());
+            Future.delayed(Duration.zero).then((_) {
+              widget.changeSelecting(false);
+            });
+          });
         });
         break;
       case MenuButtonMethod.Download:
         this.selectingValues.values.forEach((item) {
-          if (item.state == DownloadState.PAUSE) return;
-          this.downloadController.scheduler.addStop(item);
+          print(item.state);
+          if (item.state == DownloadState.STOP)
+            this.downloadController.reDownload(item);
         });
         Future.delayed(Duration.zero).then((_) {
           widget.changeSelecting(false);
