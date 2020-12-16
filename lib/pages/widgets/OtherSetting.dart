@@ -1,3 +1,4 @@
+import 'package:MinioClient/eunm/common.dart';
 import 'package:MinioClient/minio/DownloadController.dart';
 import 'package:MinioClient/utils/file.dart';
 import 'package:MinioClient/utils/utils.dart';
@@ -10,21 +11,6 @@ class OtherSetting extends StatefulWidget {
 
   @override
   _OtherSettingState createState() => _OtherSettingState();
-}
-
-enum MaxDownloadCount { One, Three, Five }
-
-int getMaxDownloadValue(MaxDownloadCount value) {
-  switch (value) {
-    case MaxDownloadCount.One:
-      return 1;
-    case MaxDownloadCount.Three:
-      return 3;
-    case MaxDownloadCount.Five:
-      return 5;
-    default:
-      return 3;
-  }
 }
 
 class _OtherSettingState extends State<OtherSetting> {

@@ -1,4 +1,6 @@
+import 'package:MinioClient/eunm/common.dart';
 import 'package:MinioClient/utils/file.dart';
+import 'package:MinioClient/utils/storage.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'DownloadController.dart';
@@ -8,7 +10,19 @@ import 'DownloadFileInstance.dart';
 /// 控制下载个数，下载完毕后继续下载下个
 class DownloadScheduler {
   final DownloadController downloadController;
-  DownloadScheduler(this.downloadController);
+  DownloadScheduler(this.downloadController) {
+    getConfigForKey<int>('downloadCount').then((count) {
+      print(count);
+      if (count == null) {
+        DownloadScheduler.downloadMaxSize = 3;
+      } else {
+        DownloadScheduler.downloadMaxSize =
+            getMaxDownloadValue(MaxDownloadCount.values[count]);
+      }
+      print('限制个数');
+      print(DownloadScheduler.downloadMaxSize);
+    });
+  }
   // ignore: close_sinks
   PublishSubject<DownloadFileInstance> scheduler = PublishSubject();
   List<DownloadFileInstance> currentDownloadList = [];
@@ -148,13 +162,14 @@ class DownloadScheduler {
   }
 
   Future<dynamic> addDelete(List<int> ids) async {
+    final removeList = [];
     delete(DownloadFileInstance item) async {
-      if (ids.indexOf(item.id) != -1) {
-        if (item.subscription != null) {
-          item.subscription.cancel();
-        }
-        await removeFile('${item.filePath}.${item.eTag}.part.minio');
+      if (ids.indexOf(item.id) == -1) return;
+      removeList.add(item);
+      if (item.subscription != null) {
+        item.subscription.cancel();
       }
+      await removeFile('${item.filePath}.${item.eTag}.part.minio');
     }
 
     this.waitingDownloadList.forEach((item) {
@@ -164,5 +179,18 @@ class DownloadScheduler {
     this.currentDownloadList.forEach((item) {
       delete(item);
     });
+
+    removeList.forEach((item) {
+      if (this.waitingDownloadList.indexOf(item) != -1) {
+        this.waitingDownloadList.remove(item);
+        return;
+      }
+      if (this.currentDownloadList.indexOf(item) != -1)
+        this.currentDownloadList.remove(item);
+      return;
+    });
+    print('还剩多少');
+    print(this.currentDownloadList.length);
+    print(this.waitingDownloadList.length);
   }
 }

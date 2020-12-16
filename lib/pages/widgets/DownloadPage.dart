@@ -258,9 +258,9 @@ class _DownloadPageState extends State<DownloadPage> {
         break;
       case MenuButtonMethod.STOP:
         this.selectingValues.values.forEach((item) {
-          if (item.state == DownloadState.STOP ||
-              item.state == DownloadState.DOWNLOAD) return;
-          this.downloadController.scheduler.addStop(item);
+          if (item.state == DownloadState.PAUSE ||
+              item.state == DownloadState.DOWNLOAD)
+            this.downloadController.scheduler.addStop(item);
         });
         Future.delayed(Duration.zero).then((_) {
           widget.changeSelecting(false);

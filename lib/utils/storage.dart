@@ -7,9 +7,9 @@ Future<bool> hasMinioConfig() async {
       prefs.getString('endPoint')?.isNotEmpty == true;
 }
 
-Future<String> getConfigForKey(String key) async {
+Future<T> getConfigForKey<T>(String key) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString(key);
+  return prefs.get(key) as T;
 }
 
 Future<void> setMinioConfig(
