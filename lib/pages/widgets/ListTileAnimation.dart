@@ -94,7 +94,7 @@ class _ListTileAnimationState extends State<ListTileAnimation> {
 
   // 渲染二级title
   Row _renderSubtitle() {
-    if (widget.isPrefix == null) {
+    if (widget.isPrefix) {
       return null;
     }
     return Row(
