@@ -5,6 +5,7 @@ enum MenuButtonMethod {
   SelectAll,
   CancelAll,
   Delete,
+  DeleteAndFile,
   Download,
   STOP,
 }
@@ -48,16 +49,20 @@ class SelectingHandler extends StatelessWidget {
               value: MenuButtonMethod.CancelAll,
             ),
             PopupMenuItem(
-              child: Text('下载勾选'),
+              child: Text('下载'),
               value: MenuButtonMethod.Download,
             ),
             PopupMenuItem(
-              child: Text('停止勾选'),
+              child: Text('停止'),
               value: MenuButtonMethod.STOP,
             ),
             PopupMenuItem(
-              child: Text('删除勾选'),
+              child: Text('删除记录'),
               value: MenuButtonMethod.Delete,
+            ),
+            PopupMenuItem(
+              child: Text('删除记录和文件'),
+              value: MenuButtonMethod.DeleteAndFile,
             ),
           ];
           return list;

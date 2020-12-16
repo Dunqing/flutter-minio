@@ -186,9 +186,10 @@ class DownloadController {
     this._db.close();
   }
 
-  Future<void> deleteDownload(List<DownloadFileInstance> item) async {
+  Future<void> deleteDownload(List<DownloadFileInstance> item,
+      {bool deleteFile}) async {
     final List<int> okids = item.map((item) => item.id).toList();
-    await this.scheduler.addDelete(okids);
+    await this.scheduler.addDelete(okids, deleteFile);
     print('开始删除数据库');
     this._db.delete(okids.join(',')).then((res) {
       this.initData();

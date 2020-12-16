@@ -238,15 +238,19 @@ class _DownloadPageState extends State<DownloadPage> {
       case MenuButtonMethod.CancelAll:
         this.selectingValues.clear();
         break;
+      case MenuButtonMethod.DeleteAndFile:
       case MenuButtonMethod.Delete:
         print('删除');
+        final text = eventType == MenuButtonMethod.DeleteAndFile
+            ? '确认删除所选的文件且包括已下载的文件'
+            : '确认删除所选的下载记录？';
         Future.delayed(Duration.zero).then((_) {
-          showConfirmDialog(this.context,
-              title: '删除文件',
-              content: Text('删除所选的文件且包括已下载的文件'), onConfirm: () async {
-            this
-                .downloadController
-                .deleteDownload(this.selectingValues.values.toList());
+          showConfirmDialog(this.context, title: '删除文件', content: Text(text),
+              onConfirm: () async {
+            this.downloadController.deleteDownload(
+                this.selectingValues.values.toList(),
+                deleteFile:
+                    eventType == MenuButtonMethod.DeleteAndFile ? true : false);
             Future.delayed(Duration.zero).then((_) {
               widget.changeSelecting(false);
             });

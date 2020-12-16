@@ -161,7 +161,8 @@ class DownloadScheduler {
     this.scheduler.add(instance);
   }
 
-  Future<dynamic> addDelete(List<int> ids) async {
+  /// deleteFile 删除包括文件
+  Future<dynamic> addDelete(List<int> ids, bool deleteFile) async {
     final removeList = [];
     delete(DownloadFileInstance item) async {
       if (ids.indexOf(item.id) == -1) return;
@@ -169,7 +170,11 @@ class DownloadScheduler {
       if (item.subscription != null) {
         item.subscription.cancel();
       }
-      await removeFile('${item.filePath}.${item.eTag}.part.minio');
+      final String etag = item.eTag.replaceAll('"', '');
+      await removeFile('${item.filePath}.$etag.part.minio');
+      if (deleteFile) {
+        await removeFile(item.filePath);
+      }
     }
 
     this.waitingDownloadList.forEach((item) {
