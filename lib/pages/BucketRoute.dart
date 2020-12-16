@@ -18,50 +18,67 @@ import 'package:share/share.dart';
 import 'widgets/ListTileAnimation.dart';
 
 class BucketRoute extends StatefulWidget {
-  BucketRoute({Key key, this.bucketName, this.prefix = ''}) : super(key: key);
-
   final String bucketName;
+
   final String prefix;
+  BucketRoute({Key key, this.bucketName, this.prefix = ''}) : super(key: key);
 
   @override
   _BucketRoute createState() => _BucketRoute();
 }
 
+enum SelectingAction { SelectAll, CancelAll, Download, Delete }
+
 class _BucketRoute extends State<BucketRoute> {
   List<dynamic> bucketObjects = [];
   MinioController minioController;
   DownloadController downloadController;
+
+  /// 展示右上角的悬浮按钮
   bool _showFloatingButton = true;
+
+  /// 多选状态
+  bool _selecting = false;
+
+  /// 多选值
+  Map<String, bool> _selectingValues = new Map();
+
+  /// 面包屑滚动调
   ScrollController _listViewController = ScrollController();
 
   @override
-  initState() {
-    super.initState();
-    this.initPrefixScroll();
-    this.minioController =
-        MinioController(bucketName: widget.bucketName, prefix: widget.prefix);
-    this.downloadController =
-        createDownloadInstance(minio: this.minioController);
-    this.getBucketObjects();
-  }
-
-  /// 初始化prefix的滚动条
-  initPrefixScroll() async {
-    await Future.delayed(Duration.zero);
-    try {
-      if (this._listViewController?.position?.maxScrollExtent == null) {
-        return;
-      }
-    } catch (err) {
-      if (!this._listViewController.hasClients) {
-        return;
-      }
-      return;
-    }
-    this._listViewController.animateTo(
-        this._listViewController.position.maxScrollExtent,
-        curve: Curves.linear,
-        duration: Duration(milliseconds: 300));
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.bucketName ?? '所有bucket'),
+          actions: _selecting
+              ? _renderSelectingActions()
+              : [
+                  IconButton(
+                    icon: Icon(Icons.home),
+                    onPressed: () {
+                      Navigator.of(context)
+                          .pushNamedAndRemoveUntil('/', (_) => false);
+                    },
+                  ),
+                  TransferButton(downloadController: this.downloadController)
+                ],
+        ),
+        body: _renderRoot(),
+        floatingActionButton: FloatingActionExtendButton(
+          visible: _showFloatingButton,
+          animatedIcon: AnimatedIcons.menu_close,
+          children: [
+            FloatingActionExtendChild(
+                onTap: _jumpPrefix,
+                label: '跳转路径',
+                child: Icon(Icons.exit_to_app)),
+            FloatingActionExtendChild(
+                onTap: _uploadFile,
+                label: '上传文件',
+                child: Icon(Icons.upload_file)),
+          ],
+        ));
   }
 
   @override
@@ -92,26 +109,95 @@ class _BucketRoute extends State<BucketRoute> {
     });
   }
 
-  _uploadFile() async {
-    FilePickerResult result = await FilePicker.platform.pickFiles();
-    if (result == null || result?.files == null || result?.files?.length == 0) {
-      print('取消了上传');
-      return Future.error('cancel');
-    }
-    List<PlatformFile> files = result.files;
-    files.forEach((file) {
-      final filename = join(widget.prefix, file.name);
-      print('上传filename');
-      print(filename);
-      this.minioController.uploadFile(filename, file.path).then((string) {
-        toast('上传成功');
-        this.getBucketObjects(refresh: true);
-      }).catchError((err) {
-        toastError(err?.message ?? err.toString());
+  handleSelectMenu(value, currentObj) {
+    // 当是多选时应该关闭多选
+    if (this._selecting == true) {
+      setState(() {
+        this._selecting = false;
       });
+    }
+    switch (value) {
+      case 'download':
+        this._download(currentObj);
+        break;
+      case 'preview':
+        this._preview(currentObj.key);
+        break;
+      case 'remove':
+        this._remove(currentObj.key);
+        break;
+      case 'share':
+        this._share(currentObj.key);
+        break;
+    }
+  }
+
+  /// 初始化prefix的滚动条
+  initPrefixScroll() async {
+    // 排除没有面包屑的情况
+    if (widget.prefix.isEmpty) {
+      return;
+    }
+    await Future.delayed(Duration.zero);
+    if (this._listViewController?.position?.maxScrollExtent == null) {
+      return;
+    }
+    this._listViewController.animateTo(
+        this._listViewController.position.maxScrollExtent,
+        curve: Curves.linear,
+        duration: Duration(milliseconds: 300));
+  }
+
+  @override
+  initState() {
+    super.initState();
+    this.initPrefixScroll();
+    this.minioController =
+        MinioController(bucketName: widget.bucketName, prefix: widget.prefix);
+    this.downloadController =
+        createDownloadInstance(minio: this.minioController);
+    this.getBucketObjects();
+  }
+
+  void _checkboxChanged(etag, value) {
+    setState(() {
+      print(etag);
+      print(value);
+      this._selectingValues[etag] = value;
     });
   }
 
+  _closeSelecting() {
+    setState(() {
+      this._selectingValues.clear();
+      this._selecting = false;
+    });
+  }
+
+  void _download(Object obj) {
+    final now = DateTime.now().millisecond;
+    final filePath = '${DownloadController.downloadPath}/${obj.key}';
+    this
+        .downloadController
+        .download(filePath, widget.bucketName, obj.key, now, now, obj.size, 0);
+    // this.minioController.downloadFile(filename.key);
+  }
+
+  /// 是否已勾选
+  bool _hasSelected(item) {
+    if (item is Prefix) {
+      return false;
+    }
+    if (!this._selectingValues.containsKey(item.eTag)) {
+      return false;
+    }
+    if (this._selectingValues[item.eTag] == false) {
+      return false;
+    }
+    return true;
+  }
+
+  /// 跳转路径按钮
   _jumpPrefix() async {
     showDialog(
         context: this.context,
@@ -154,27 +240,7 @@ class _BucketRoute extends State<BucketRoute> {
                         toast('当前已在此路径上');
                         return;
                       }
-
-                      /// 加入此判断是用户以这个功能往会跳
-                      /// 比如 /123/234 到 /123 那应该替换路由
-                      if (prefix.length < widget.prefix.length) {
-                        print('往回跳');
-                        Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (context) {
-                          return BucketRoute(
-                            bucketName: widget.bucketName,
-
-                            /// fix: 如果不补充此斜杠，上传文件后
-                            /// 需要主动跳转到当前目录下的/路径下才能看见上传的文件
-                            prefix:
-                                prefix.endsWith('/') ? prefix : prefix + '/',
-                          );
-                        }));
-                        return;
-                      }
-                      Navigator.of(context).pop();
-                      Navigator.of(context)
-                          .push(MaterialPageRoute(builder: (context) {
+                      routeBuilder(context) {
                         return BucketRoute(
                           bucketName: widget.bucketName,
 
@@ -182,7 +248,20 @@ class _BucketRoute extends State<BucketRoute> {
                           /// 需要主动跳转到当前目录下的/路径下才能看见上传的文件
                           prefix: prefix.endsWith('/') ? prefix : prefix + '/',
                         );
-                      }));
+                      }
+
+                      Navigator.of(context).pop();
+
+                      /// 加入此判断是用户以这个功能往会跳
+                      /// 比如 /123/234 到 /123 那应该替换路由
+                      if (prefix.length < widget.prefix.length) {
+                        print('往回跳');
+                        Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: routeBuilder));
+                        return;
+                      }
+                      Navigator.of(context)
+                          .push(MaterialPageRoute(builder: routeBuilder));
                     },
                     child: Text('跳转'),
                   )
@@ -191,44 +270,45 @@ class _BucketRoute extends State<BucketRoute> {
         });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.bucketName ?? '所有bucket'),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.home),
-              onPressed: () {
-                Navigator.of(context)
-                    .pushNamedAndRemoveUntil('/', (_) => false);
-              },
-            ),
-            TransferButton(downloadController: this.downloadController)
-          ],
-        ),
-        body: _renderRoot(),
-        floatingActionButton: FloatingActionExtendButton(
-          visible: _showFloatingButton,
-          animatedIcon: AnimatedIcons.menu_close,
-          children: [
-            FloatingActionExtendChild(
-                onTap: _jumpPrefix,
-                label: '跳转路径',
-                child: Icon(Icons.exit_to_app)),
-            FloatingActionExtendChild(
-                onTap: _uploadFile,
-                label: '上传文件',
-                child: Icon(Icons.upload_file)),
-          ],
-        ));
+  /// animationlisttile的长按
+  void _onLongPress() {
+    print('长按');
+    setState(() {
+      this._selecting = true;
+    });
+  }
+
+  void _preview(filename) {
+    this.minioController.getPreviewUrl(filename).then((url) {
+      print('$filename $url');
+      PreviewNetwork(context: this.context).preview(url);
+    });
+  }
+
+  void _remove(filenames) {
+    final text =
+        filenames is String ? '是否删除${basename(filenames)}?' : '是否删除选中的文件';
+    showConfirmDialog(this.context, title: '删除文件', content: Text(text),
+        onConfirm: () async {
+      final closeLoading = await DialogLoading.showLoading(this.context);
+      return this.minioController.removeFile(filenames).then((_) {
+        toast('删除成功');
+        closeLoading();
+        return this.getBucketObjects(refresh: true);
+      }).catchError((err) {
+        closeLoading();
+        toastError(err.toString());
+      });
+    });
   }
 
   Widget _renderBreadcrumbs() {
     final _prefix = widget.prefix.split('/');
     final style = TextStyle(fontSize: 20);
     final activeStyle = TextStyle(fontSize: 20, color: Colors.blue);
+
     List<Widget> _prefixs = [];
+
     for (var i = 0; i < _prefix.length; i++) {
       final item = _prefix[i];
       if (_prefix[i].isEmpty) {
@@ -244,6 +324,7 @@ class _BucketRoute extends State<BucketRoute> {
         _prefixs.add(Icon(Icons.navigate_next));
       }
     }
+
     return Container(
       alignment: Alignment.center,
       constraints: BoxConstraints.expand(height: 50),
@@ -264,52 +345,6 @@ class _BucketRoute extends State<BucketRoute> {
         ],
       ),
     );
-  }
-
-  Widget _renderRoot() {
-    return Container(
-        constraints: BoxConstraints.expand(),
-        child: Column(
-          children: [
-            if (widget.prefix != '') ...[
-              _renderBreadcrumbs(),
-              Divider(
-                height: 1,
-              ),
-            ],
-            Expanded(
-              child: this.bucketObjects.length == 0
-                  ? _renderZeroContent()
-                  : this._renderListObjects(),
-            ),
-          ],
-        ));
-  }
-
-  Widget _renderZeroContent() {
-    return CenterContent(
-      children: [
-        Text(
-          '还没有上传数据，赶紧来上传吧！',
-          style: TextStyle(fontSize: 16),
-        ),
-        RaisedButton(
-          onPressed: _uploadFile,
-          color: Colors.blue,
-          textColor: Colors.white,
-          child: Text('文件上传'),
-        )
-      ],
-    );
-  }
-
-  _setFloatingButtonValue(value) {
-    if (value == this._showFloatingButton) {
-      return;
-    }
-    setState(() {
-      this._showFloatingButton = value;
-    });
   }
 
   Widget _renderListObjects() {
@@ -342,46 +377,141 @@ class _BucketRoute extends State<BucketRoute> {
           final currentObj = this.bucketObjects[index];
           // 是否为路径
           return ListTileAnimation(
+              checkboxChanged: _checkboxChanged,
+              selectingValues: _selectingValues,
+              selecting: _selecting,
               current: currentObj,
               prefix: widget.prefix,
               handleSelectMenu: this.handleSelectMenu,
+              onLongPress: _onLongPress,
               bucketName: widget.bucketName);
         },
       ),
     );
   }
 
-  handleSelectMenu(value, currentObj) {
-    switch (value) {
-      case 'download':
-        this._download(currentObj);
-        break;
-      case 'preview':
-        this._preview(currentObj.key);
-        break;
-      case 'remove':
-        this._remove(currentObj.key);
-        break;
-      case 'share':
-        this._share(currentObj.key);
-        break;
+  Widget _renderRoot() {
+    return Container(
+        constraints: BoxConstraints.expand(),
+        child: Column(
+          children: [
+            if (widget.prefix != '') ...[
+              _renderBreadcrumbs(),
+              Divider(
+                height: 1,
+              ),
+            ],
+            Expanded(
+              child: this.bucketObjects.length == 0
+                  ? _renderZeroContent()
+                  : this._renderListObjects(),
+            ),
+          ],
+        ));
+  }
+
+  List<Widget> _renderSelectingActions() {
+    return [
+      Tooltip(
+        message: '取消多选',
+        child: IconButton(
+          icon: Icon(Icons.cancel),
+          onPressed: () {
+            setState(() {
+              this._closeSelecting();
+            });
+          },
+        ),
+      ),
+      PopupMenuButton(
+        tooltip: '操作',
+        onSelected: (value) {
+          switch (value) {
+            case SelectingAction.SelectAll:
+              setState(() {
+                this.bucketObjects.forEach((item) {
+                  if (item is Prefix) {
+                    return;
+                  }
+                  if (item is Object) {
+                    this._selectingValues[item.eTag] = true;
+                  }
+                });
+              });
+              break;
+            case SelectingAction.CancelAll:
+              setState(() {
+                this._selectingValues.clear();
+              });
+              break;
+            case SelectingAction.Download:
+              this.bucketObjects.forEach((item) {
+                if (this._hasSelected(item)) {
+                  this._download(item);
+                }
+              });
+              this._closeSelecting();
+              break;
+            case SelectingAction.Delete:
+              List<String> filenames = [];
+              this.bucketObjects.forEach((item) {
+                if (this._hasSelected(item)) {
+                  filenames.add(item.key);
+                }
+              });
+              this._remove(filenames);
+              this._closeSelecting();
+              break;
+          }
+        },
+        itemBuilder: (context) {
+          List<PopupMenuEntry<dynamic>> list = [
+            PopupMenuItem(
+              child: Text('选择全部'),
+              value: SelectingAction.SelectAll,
+            ),
+            PopupMenuItem(
+              child: Text('取消选择'),
+              value: SelectingAction.CancelAll,
+            ),
+            PopupMenuItem(
+              child: Text('下载勾选'),
+              value: SelectingAction.Download,
+            ),
+            PopupMenuItem(
+              child: Text('删除勾选'),
+              value: SelectingAction.Delete,
+            ),
+          ];
+          return list;
+        },
+      )
+    ];
+  }
+
+  Widget _renderZeroContent() {
+    return CenterContent(
+      children: [
+        Text(
+          '还没有上传数据，赶紧来上传吧！',
+          style: TextStyle(fontSize: 16),
+        ),
+        RaisedButton(
+          onPressed: _uploadFile,
+          color: Colors.blue,
+          textColor: Colors.white,
+          child: Text('文件上传'),
+        )
+      ],
+    );
+  }
+
+  _setFloatingButtonValue(value) {
+    if (value == this._showFloatingButton) {
+      return;
     }
-  }
-
-  void _preview(filename) {
-    this.minioController.getPreviewUrl(filename).then((url) {
-      print('$filename $url');
-      PreviewNetwork(context: this.context).preview(url);
-    });
-  }
-
-  void _remove(filename) {
-    showConfirmDialog(this.context,
-        title: '删除文件', content: Text('是否删除$filename?'), onConfirm: () {
-      this.minioController.removeFile(filename).then((_) {
-        toast('删除成功');
-        return this.getBucketObjects(refresh: true);
-      });
+    setState(() {
+      this._showFloatingButton = value;
     });
   }
 
@@ -419,12 +549,23 @@ class _BucketRoute extends State<BucketRoute> {
         });
   }
 
-  void _download(Object obj) {
-    final now = DateTime.now().millisecond;
-    final filePath = '${DownloadController.downloadPath}/${obj.key}';
-    this
-        .downloadController
-        .download(filePath, widget.bucketName, obj.key, now, now, obj.size, 0);
-    // this.minioController.downloadFile(filename.key);
+  _uploadFile() async {
+    FilePickerResult result = await FilePicker.platform.pickFiles();
+    if (result == null || result?.files == null || result?.files?.length == 0) {
+      print('取消了上传');
+      return Future.error('cancel');
+    }
+    List<PlatformFile> files = result.files;
+    files.forEach((file) {
+      final filename = join(widget.prefix, file.name);
+      print('上传filename');
+      print(filename);
+      this.minioController.uploadFile(filename, file.path).then((string) {
+        toast('上传成功');
+        this.getBucketObjects(refresh: true);
+      }).catchError((err) {
+        toastError(err?.message ?? err.toString());
+      });
+    });
   }
 }

@@ -138,8 +138,11 @@ class MinioController {
     return this.presignedGetObject(filename, expires: 60 * 60 * 24);
   }
 
-  Future<void> removeFile(String filename) {
-    return this.minio.removeObject(this.bucketName, filename);
+  /// 可多删除和单删除
+  Future<void> removeFile<T>(T filenames) {
+    final List<String> objects = filenames is String ? [filenames] : filenames;
+    print(objects);
+    return this.minio.removeObjects(this.bucketName, objects);
   }
 
   Future<void> createBucket(String bucketName) {

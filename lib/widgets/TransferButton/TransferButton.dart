@@ -30,7 +30,8 @@ class TransferButton extends StatelessWidget {
               final downloadList = snapshot.data;
               int downloadCount = 0;
               downloadList?.forEach((item) =>
-                  item.state == DownloadState.DOWNLOAD
+                  item.state == DownloadState.DOWNLOAD ||
+                          item.state == DownloadState.PAUSE
                       ? downloadCount++
                       : null);
               if (downloadCount == 0) {
