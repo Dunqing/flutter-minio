@@ -177,9 +177,8 @@ class _BucketRoute extends State<BucketRoute> {
   void _download(Object obj) {
     final now = DateTime.now().millisecond;
     final filePath = '${DownloadController.downloadPath}/${obj.key}';
-    this
-        .downloadController
-        .download(filePath, widget.bucketName, obj.key, now, now, obj.size, 0);
+    this.downloadController.download(
+        filePath, widget.bucketName, obj.key, obj.eTag, now, now, obj.size, 0);
     // this.minioController.downloadFile(filename.key);
   }
 

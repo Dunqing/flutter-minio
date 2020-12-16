@@ -1,3 +1,4 @@
+import 'package:MinioClient/utils/file.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'DownloadController.dart';
@@ -144,5 +145,24 @@ class DownloadScheduler {
 
     this.waitingDownloadList.remove(instance);
     this.scheduler.add(instance);
+  }
+
+  Future<dynamic> addDelete(List<int> ids) async {
+    delete(DownloadFileInstance item) async {
+      if (ids.indexOf(item.id) != -1) {
+        if (item.subscription != null) {
+          item.subscription.cancel();
+        }
+        await removeFile('${item.filePath}.${item.eTag}.part.minio');
+      }
+    }
+
+    this.waitingDownloadList.forEach((item) {
+      delete(item);
+    });
+
+    this.currentDownloadList.forEach((item) {
+      delete(item);
+    });
   }
 }

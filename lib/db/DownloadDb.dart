@@ -10,11 +10,11 @@ class DownloadDb {
   Future<Database> initDb() {
     return getDatabasesPath().then((path) async {
       final dbPath = path + '/minio.db';
-      // await deleteDatabase(dbPath);
+      await deleteDatabase(dbPath);
       this._database = await openDatabase(dbPath, version: 1,
           onCreate: (Database db, int version) {
         db.execute(
-            'CREATE TABLE DownloadLog (id INTEGER PRIMARY KEY, bucketName TEXT, filename TEXT, createAt TEXT, updateAt TEXT, fileSize INTEGER, downloadSize INTEGER, state INTEGER, stateText TEXT, filePath TEXT)');
+            'CREATE TABLE DownloadLog (id INTEGER PRIMARY KEY, bucketName TEXT, filename TEXT, createAt TEXT, updateAt TEXT, fileSize INTEGER, downloadSize INTEGER, state INTEGER, stateText TEXT, filePath TEXT, eTag TEXT)');
       });
       // this._database.execute('DROP TABLE DownloadLog');
       database = this._database;
@@ -23,9 +23,9 @@ class DownloadDb {
   }
 
   insert(bucketName, filename, createAt, updateAt, fileSize, downloadSize,
-      int state, filePath) {
+      int state, filePath, String eTag) {
     return this._database.rawInsert(
-        'INSERT INTO DownloadLog (bucketName, filename, createAt, updateAt, fileSize, downloadSize, state, stateText, filePath) VALUES(?, ?, ?, ?, ?, ?, ?, "", ?)',
+        'INSERT INTO DownloadLog (bucketName, filename, createAt, updateAt, fileSize, downloadSize, state, stateText, filePath, eTag) VALUES(?, ?, ?, ?, ?, ?, ?, "", ?, ?)',
         [
           bucketName,
           filename,
@@ -34,8 +34,15 @@ class DownloadDb {
           fileSize,
           downloadSize,
           state,
-          filePath
+          filePath,
+          eTag
         ]);
+  }
+
+  Future<int> delete(String okid) {
+    return this
+        ._database
+        .rawDelete('DELETE FROM DownloadLog WHERE id IN ($okid)');
   }
 
   updateSize(int id, int downloadSize) async {

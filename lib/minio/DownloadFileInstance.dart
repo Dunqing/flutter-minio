@@ -10,6 +10,7 @@ class DownloadFileInstance {
   final int updateAt;
   final int fileSize;
   final String filePath;
+  final String eTag;
   String stateText;
   DownloadState state = DownloadState.DOWNLOAD;
   StreamSubscription<List<int>> subscription;
@@ -23,6 +24,7 @@ class DownloadFileInstance {
     this.updateAt,
     this.fileSize,
     this.downloadSize, {
+    this.eTag,
     this.state,
     this.stateText = '',
     this.filePath,

@@ -27,7 +27,12 @@ class DownloadController {
   DownloadController({this.minio}) {
     this._db = DownloadDb();
     this._db.initDb().then((_) {
-      this.initData();
+      this.initData((instance) {
+        if (instance.state == DownloadState.DOWNLOAD ||
+            instance.state == DownloadState.PAUSE) {
+          this.scheduler.add(instance);
+        }
+      });
     });
 
     // 优先使用配置的路径
@@ -49,7 +54,7 @@ class DownloadController {
   }
 
   // 重启app初始化下载数据
-  initData() {
+  initData([callback]) {
     this._db.findAll().then((res) {
       final stateValues = DownloadState.values;
       final List<DownloadFileInstance> list = [];
@@ -67,9 +72,8 @@ class DownloadController {
           filePath: data['filePath'],
         );
         list.add(instance);
-        if (instance.state == DownloadState.DOWNLOAD ||
-            instance.state == DownloadState.PAUSE) {
-          this.scheduler.add(instance);
+        if (callback is Function) {
+          callback(instance);
         }
       });
       this.downloadList = list;
@@ -78,15 +82,15 @@ class DownloadController {
   }
 
   // 插入一条下载数据
-  Future<int> download(filePath, bucketName, filename, createAt, updateAt,
-      fileSize, downloadSize) async {
+  Future<int> download(filePath, bucketName, filename, String eTag, createAt,
+      updateAt, fileSize, downloadSize) async {
     await permissionStorage();
     final id = await this._db.insert(bucketName, filename, createAt, updateAt,
-        fileSize, downloadSize, DownloadState.DOWNLOAD.index, filePath);
+        fileSize, downloadSize, DownloadState.DOWNLOAD.index, filePath, eTag);
 
     final instance = DownloadFileInstance(
         id, bucketName, filename, createAt, updateAt, fileSize, downloadSize,
-        state: DownloadState.STOP, filePath: filePath);
+        state: DownloadState.STOP, filePath: filePath, eTag: eTag);
 
     this.downloadList.insert(0, instance);
     this.scheduler.add(instance);
@@ -180,6 +184,15 @@ class DownloadController {
     this.downloadStream.close();
     this.scheduler.scheduler.close();
     this._db.close();
+  }
+
+  Future<void> deleteDownload(List<DownloadFileInstance> item) async {
+    final List<int> okids = item.map((item) => item.id).toList();
+    await this.scheduler.addDelete(okids);
+    print('开始删除数据库');
+    this._db.delete(okids.join(',')).then((res) {
+      this.initData();
+    });
   }
 }
 
