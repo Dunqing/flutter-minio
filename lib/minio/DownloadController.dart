@@ -27,12 +27,7 @@ class DownloadController {
   DownloadController({this.minio}) {
     this._db = DownloadDb();
     this._db.initDb().then((_) {
-      this.initData((instance) {
-        if (instance.state == DownloadState.DOWNLOAD ||
-            instance.state == DownloadState.PAUSE) {
-          this.scheduler.add(instance);
-        }
-      });
+      this.initData();
     });
 
     // 优先使用配置的路径
@@ -53,12 +48,12 @@ class DownloadController {
     this.minio = minio;
   }
 
-  // 重启app初始化下载数据
+  // 重启app或删除数据后初始化下载数据
   initData([callback]) {
     this._db.findAll().then((res) {
       final stateValues = DownloadState.values;
       final List<DownloadFileInstance> list = [];
-      res.reversed.forEach((data) {
+      res.forEach((data) {
         final instance = DownloadFileInstance(
           data['id'],
           data['bucketName'],
@@ -72,12 +67,16 @@ class DownloadController {
           filePath: data['filePath'],
         );
         list.add(instance);
+        if (instance.state == DownloadState.DOWNLOAD ||
+            instance.state == DownloadState.PAUSE) {
+          this.scheduler.add(instance);
+        }
         if (callback is Function) {
           callback(instance);
         }
       });
-      this.downloadList = list;
-      this.downloadStream.add(list);
+      this.downloadList = list.reversed.toList();
+      this.downloadStream.add(this.downloadList);
     });
   }
 
@@ -192,6 +191,12 @@ class DownloadController {
     await this.scheduler.addDelete(okids, deleteFile);
     print('开始删除数据库');
     this._db.delete(okids.join(',')).then((res) {
+      // 还需要清理调度器的数据
+      this.downloadList.forEach((instance) {
+        instance.subscription?.cancel();
+        this.scheduler.currentDownloadList.clear();
+        this.scheduler.waitingDownloadList.clear();
+      });
       this.initData();
     });
   }

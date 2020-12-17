@@ -103,15 +103,22 @@ class DownloadScheduler {
   notify(DownloadFileInstance instance) {
     this.removeDownload(instance);
 
+    print('当前正在下载 ${this.currentDownloadList.length}');
     print('当前还有几个要下载的 ${this.waitingDownloadList.length}');
     // 如果等待下载的已下完则结束运行
 
     if (this.waitingDownloadList.length == 0) {
       return;
     }
-    final runInstance = this.waitingDownloadList.last;
-    this.waitingDownloadList.remove(runInstance);
-    this.scheduler.add(runInstance);
+
+    // 处理下载失败，更改下载个数限制 重置下载个数的方法
+    for (var i = this.currentDownloadList.length;
+        i < DownloadScheduler.downloadMaxSize;
+        i++) {
+      final runInstance = this.waitingDownloadList.first;
+      this.waitingDownloadList.remove(runInstance);
+      this.scheduler.add(runInstance);
+    }
   }
 
   // 触发下载
@@ -138,9 +145,13 @@ class DownloadScheduler {
 
   // 如果状态已经在下载了则暂停 不加到等待队列
   void addStop(DownloadFileInstance instance) {
+    print(instance);
     final index = this.getIndex(instance);
+    print(index);
     if (index != -1) {
       this.stopDownload(index);
+      this.downloadController.refresh();
+      // throw '找不到该下载';
     }
 
     // 如果还有在等待运行的则取出最后一个然后下载
@@ -170,7 +181,7 @@ class DownloadScheduler {
       if (item.subscription != null) {
         item.subscription.cancel();
       }
-      final String etag = item.eTag.replaceAll('"', '');
+      final String etag = item.eTag?.replaceAll('"', '');
       await removeFile('${item.filePath}.$etag.part.minio');
       if (deleteFile) {
         await removeFile(item.filePath);

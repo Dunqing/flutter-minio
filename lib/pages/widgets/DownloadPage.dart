@@ -146,9 +146,9 @@ class _DownloadPageState extends State<DownloadPage> {
         return FlatButton.icon(
           label: Text('暂停'),
           icon: Icon(Icons.stop_circle),
-          onPressed: () {
+          onPressed: () async {
+            await this.downloadController.stopDownload(current);
             toast('暂停成功');
-            this.downloadController.stopDownload(current);
           },
         );
         break;
