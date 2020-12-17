@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 const textList = [
-  '本项目基于https://pub.flutter-io.cn/packages/minio实现的，此项目是我的第一个Flutter项目。',
-  '我是学前端的，对flutter感兴趣，并且想做一个开源项目，为自己之后找工作做准备。'
-      '之前有部署过minio，知道有web端，了解到此项目还没有flutter的实现，但是已有sdk实现。所以选择做这个项目',
-  '我没有系统的看过flutter和dart的文档。此项目在边看文档，边查资料下完成的。可能有很多功能实现的不好，并且可能有性能问题。'
+  '本项目基于https://pub.flutter-io.cn/packages/minio实现的，且该sdk不支持中文字符',
+  '此项目的sdk无法完成上传进度监听，和取消下载请求，可能会造成性能损耗',
+  '此项目写的并不好，很多好用的widget或者api未用上，采用状态库是rxdart',
+  '此下载功能和进度动态更新是自己想出来的，不知道是否为标准的下载方法',
+  '我没有系统的看过flutter和dart的文档。此项目在边看文档，边查资料下完成的',
 ];
 
 aboutProject(context) {

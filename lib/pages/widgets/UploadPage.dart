@@ -40,7 +40,7 @@ class _UploadPageState extends State<UploadPage> {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = TextStyle(fontSize: 20);
+    final textStyle = TextStyle(fontSize: 18);
     return Container(
       padding: EdgeInsets.all(20),
       constraints: BoxConstraints.expand(),
@@ -48,9 +48,8 @@ class _UploadPageState extends State<UploadPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('因为dart的"minio"的sdk不是官方实现的，有诸多问题，无法完成此功能。', style: textStyle),
-          Text(''),
-          Text('上传接口可以使用，但不能知道上传进度。请尽量不要上传大文件！', style: textStyle)
+          Text('因为dart的minio的sdk非官方实现的，有诸多问题，无法完成此功能。', style: textStyle),
+          Text('上传接口虽可以使用，但不能知道上传进度，请尽量不要上传大文件！', style: textStyle)
         ],
       ),
     );

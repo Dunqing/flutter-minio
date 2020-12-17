@@ -68,7 +68,10 @@ class _OtherSettingState extends State<OtherSetting> {
 
   List<Widget> _renderDownloadCount() {
     return [
-      Text('同时最多下载数量'),
+      Text(
+        '同时最多下载数量',
+        style: TextStyle(fontSize: 18),
+      ),
       Column(children: [
         RadioListTile<MaxDownloadCount>(
           title: Text(
@@ -97,7 +100,10 @@ class _OtherSettingState extends State<OtherSetting> {
 
   List<Widget> _renderSelectDictionary() {
     return [
-      Text('更换下载目录地址'),
+      Text(
+        '更换下载目录地址',
+        style: TextStyle(fontSize: 18),
+      ),
       Text(
         '注意: 更改路径不会影响到更改之前下载的文件',
         style: TextStyle(color: Colors.red, fontSize: 12),
