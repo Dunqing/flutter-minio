@@ -159,11 +159,9 @@ class _BucketRoute extends State<BucketRoute> {
     this.getBucketObjects();
   }
 
-  void _checkboxChanged(etag, value) {
+  void _checkboxChanged(key, value) {
     setState(() {
-      print(etag);
-      print(value);
-      this._selectingValues[etag] = value;
+      this._selectingValues[key] = value;
     });
   }
 
@@ -187,10 +185,14 @@ class _BucketRoute extends State<BucketRoute> {
     if (item is Prefix) {
       return false;
     }
-    if (!this._selectingValues.containsKey(item.eTag)) {
+    final key = '${item.key}-${item.eTag}';
+    if (item is Prefix) {
       return false;
     }
-    if (this._selectingValues[item.eTag] == false) {
+    if (!this._selectingValues.containsKey(key)) {
+      return false;
+    }
+    if (this._selectingValues[key] == false) {
       return false;
     }
     return true;
@@ -433,7 +435,7 @@ class _BucketRoute extends State<BucketRoute> {
                     return;
                   }
                   if (item is Object) {
-                    this._selectingValues[item.eTag] = true;
+                    this._selectingValues['${item.key}-${item.eTag}'] = true;
                   }
                 });
               });

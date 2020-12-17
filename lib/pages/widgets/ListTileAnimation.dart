@@ -51,6 +51,8 @@ class _ListTileAnimationState extends State<ListTileAnimation> {
   /// listTile 的leading
   Widget _leading;
 
+  String get _key => '${widget.current.key}-${widget.current.eTag}';
+
   @override
   void initState() {
     // 初始化leading
@@ -204,7 +206,6 @@ class _ListTileAnimationState extends State<ListTileAnimation> {
       return Icon(Icons.folder);
     }
     if (key is String) {
-      print(key.lastIndexOf('.'));
       final index = key.lastIndexOf('.');
       if (index == -1) {
         return Icon(Icons.text_snippet_rounded);
@@ -244,7 +245,7 @@ class _ListTileAnimationState extends State<ListTileAnimation> {
         width: 25,
         height: 25,
         child: Checkbox(
-          value: widget.selectingValues[current.eTag] ?? false,
+          value: widget.selectingValues[_key] ?? false,
           // onChanged: (value) => (widget.checkboxChanged(current.eTag, value)),
           onChanged: (value) => null,
         ),
@@ -261,9 +262,9 @@ class _ListTileAnimationState extends State<ListTileAnimation> {
         return;
       }
       widget.checkboxChanged(
-          widget.current.eTag,
-          widget.selectingValues[widget.current.eTag] is bool
-              ? !widget.selectingValues[widget.current.eTag]
+          _key,
+          widget.selectingValues[_key] is bool
+              ? !widget.selectingValues[_key]
               : true);
     }
 
@@ -284,9 +285,9 @@ class _ListTileAnimationState extends State<ListTileAnimation> {
     }
     widget.onLongPress();
     widget.checkboxChanged(
-        widget.current.eTag,
-        widget.selectingValues[widget.current.eTag] is bool
-            ? !widget.selectingValues[widget.current.eTag]
+        _key,
+        widget.selectingValues[_key] is bool
+            ? !widget.selectingValues[_key]
             : true);
   }
 }
