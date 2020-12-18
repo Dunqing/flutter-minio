@@ -10,7 +10,7 @@ class DownloadDb {
   Future<Database> initDb() {
     return getDatabasesPath().then((path) async {
       final dbPath = path + '/minio.db';
-      await deleteDatabase(dbPath);
+      // await deleteDatabase(dbPath);
       this._database = await openDatabase(dbPath, version: 1,
           onCreate: (Database db, int version) {
         db.execute(
