@@ -63,14 +63,10 @@ class MinioController {
   final maxObjectSize = 5 * 1024 * 1024 * 1024 * 1024;
 
   MinioController({this.bucketName, this.prefix}) {
-    print('111');
-    print(_minio);
     if (_minio is Minio) {
       this.minio = _minio;
     } else {
       _resetMinio().then((_) {
-        print('222');
-        print(_);
         this.minio = _;
       });
     }
@@ -78,7 +74,6 @@ class MinioController {
 
   Future<List<IncompleteUpload>> listIncompleteUploads(
       {String bucketName}) async {
-    print(bucketName ?? this.bucketName);
     final list = this
         .minio
         .listIncompleteUploads(bucketName ?? this.bucketName, '')
@@ -107,8 +102,6 @@ class MinioController {
   }
 
   Future<List<Bucket>> getListBuckets() async {
-    print('bucket');
-    print(this.minio);
     return this.minio.listBuckets();
   }
 
@@ -141,12 +134,10 @@ class MinioController {
   /// 可多删除和单删除
   Future<void> removeFile<T>(T filenames) {
     final List<String> objects = filenames is String ? [filenames] : filenames;
-    print(objects);
     return this.minio.removeObjects(this.bucketName, objects);
   }
 
   Future<void> createBucket(String bucketName) {
-    print(bucketName);
     return this.minio.makeBucket(bucketName);
   }
 
@@ -207,7 +198,6 @@ class MinioController {
     if (onCompleted != null) {
       onCompleted(partFile.statSync().size, stat.size);
     }
-    // print('${partFile.statSync().size}, ${stat.size}');
 
     final localStat = await partFile.stat();
     if (localStat.size != stat.size) {

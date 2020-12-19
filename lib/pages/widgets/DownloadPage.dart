@@ -240,7 +240,6 @@ class _DownloadPageState extends State<DownloadPage> {
         break;
       case MenuButtonMethod.DeleteAndFile:
       case MenuButtonMethod.Delete:
-        print('删除');
         final text = eventType == MenuButtonMethod.DeleteAndFile
             ? '确认删除所选的文件且包括已下载的文件'
             : '确认删除所选的下载记录？';
@@ -259,7 +258,6 @@ class _DownloadPageState extends State<DownloadPage> {
         break;
       case MenuButtonMethod.Download:
         this.selectingValues.values.forEach((item) {
-          print(item.state);
           if (item.state == DownloadState.STOP)
             this.downloadController.reDownload(item);
         });

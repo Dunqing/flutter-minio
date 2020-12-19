@@ -105,7 +105,6 @@ class _BucketRoute extends State<BucketRoute> {
     }).catchError((err) {
       closeLoading();
       toastError(err.toString());
-      print(err);
     });
   }
 
@@ -256,7 +255,6 @@ class _BucketRoute extends State<BucketRoute> {
                       /// 加入此判断是用户以这个功能往会跳
                       /// 比如 /123/234 到 /123 那应该替换路由
                       if (prefix.length < widget.prefix.length) {
-                        print('往回跳');
                         Navigator.of(context).pushReplacement(
                             MaterialPageRoute(builder: routeBuilder));
                         return;
@@ -273,7 +271,6 @@ class _BucketRoute extends State<BucketRoute> {
 
   /// animationlisttile的长按
   void _onLongPress() {
-    print('长按');
     setState(() {
       this._selecting = true;
     });
@@ -281,7 +278,6 @@ class _BucketRoute extends State<BucketRoute> {
 
   void _preview(filename) {
     this.minioController.getPreviewUrl(filename).then((url) {
-      print('$filename $url');
       PreviewNetwork(context: this.context).preview(url);
     });
   }
@@ -358,7 +354,6 @@ class _BucketRoute extends State<BucketRoute> {
           _maxValue = event.metrics.maxScrollExtent;
         } else if (event is ScrollUpdateNotification) {
           _value = event.metrics.pixels;
-          print(event.metrics.maxScrollExtent);
         } else if (event is ScrollEndNotification) {
           // 排除无法滚动的情况
           if (_value == 0.0 && _maxValue == 0.0) {
@@ -553,14 +548,11 @@ class _BucketRoute extends State<BucketRoute> {
   _uploadFile() async {
     FilePickerResult result = await FilePicker.platform.pickFiles();
     if (result == null || result?.files == null || result?.files?.length == 0) {
-      print('取消了上传');
       return Future.error('cancel');
     }
     List<PlatformFile> files = result.files;
     files.forEach((file) {
       final filename = join(widget.prefix, file.name);
-      print('上传filename');
-      print(filename);
       this.minioController.uploadFile(filename, file.path).then((string) {
         toast('上传成功');
         this.getBucketObjects(refresh: true);

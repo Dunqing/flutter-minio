@@ -29,7 +29,6 @@ class _OtherSettingState extends State<OtherSetting> {
     if (prefs.containsKey('downloadCount')) {
       this._count = MaxDownloadCount.values[prefs.getInt('downloadCount')];
     }
-    print('获取下载地址');
     if (prefs.containsKey('downloadPath')) {
       setState(() {
         this._downloadPath = prefs.getString('downloadPath');
@@ -37,7 +36,6 @@ class _OtherSettingState extends State<OtherSetting> {
       return;
     } else {
       getDictionaryPath().then((path) {
-        print(path);
         setState(() {
           this._downloadPath = path;
         });
@@ -139,7 +137,6 @@ class _OtherSettingState extends State<OtherSetting> {
     // 更改下载地址的同时要修改正在运行的controller地址
     DownloadController.downloadPath = path;
 
-    print(DownloadController.downloadPath);
     setState(() {
       _downloadPath = path;
     });

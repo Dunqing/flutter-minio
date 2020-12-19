@@ -25,7 +25,6 @@ class _FileOperationRouteState extends State<FileOperationRoute> {
     this._controller = TabController(length: 2, vsync: ScrollableState());
     this._controller.addListener(() {
       if (this._controller.index != 0) {
-        print('关闭');
         this._changeSelecting(false);
       }
     });

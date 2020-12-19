@@ -157,10 +157,8 @@ class _AccountSettingState extends State<AccountSetting> {
     await MinioController.resetMinio();
     toast('保存成功');
     Navigator.of(context).pushNamedAndRemoveUntil('/', (route) {
-      print(route);
       return false;
     });
-    print('$protocol $domain $port');
   }
 
   void _reset() {
