@@ -1,4 +1,4 @@
-# minio
+# minio [下载地址](https://github.com/1247748612/flutter-minio/releases)
 
 > 基于flutter实现的minio客户端
 > 使用的flutter sdk为1.22.5版本
