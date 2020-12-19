@@ -12,15 +12,12 @@ class DownloadScheduler {
   final DownloadController downloadController;
   DownloadScheduler(this.downloadController) {
     getConfigForKey<int>('downloadCount').then((count) {
-      print(count);
       if (count == null) {
         DownloadScheduler.downloadMaxSize = 3;
       } else {
         DownloadScheduler.downloadMaxSize =
             getMaxDownloadValue(MaxDownloadCount.values[count]);
       }
-      print('限制个数');
-      print(DownloadScheduler.downloadMaxSize);
     });
   }
   // ignore: close_sinks
@@ -103,10 +100,7 @@ class DownloadScheduler {
   notify(DownloadFileInstance instance) {
     this.removeDownload(instance);
 
-    print('当前正在下载 ${this.currentDownloadList.length}');
-    print('当前还有几个要下载的 ${this.waitingDownloadList.length}');
     // 如果等待下载的已下完则结束运行
-
     if (this.waitingDownloadList.length == 0) {
       return;
     }
@@ -139,15 +133,11 @@ class DownloadScheduler {
 
   // 正常下载
   void add(DownloadFileInstance instance) {
-    print('listen where $instance');
-    this.scheduler.add(instance);
   }
 
   // 如果状态已经在下载了则暂停 不加到等待队列
   void addStop(DownloadFileInstance instance) {
-    print(instance);
     final index = this.getIndex(instance);
-    print(index);
     if (index != -1) {
       this.stopDownload(index);
       this.downloadController.refresh();
@@ -205,8 +195,5 @@ class DownloadScheduler {
         this.currentDownloadList.remove(item);
       return;
     });
-    print('还剩多少');
-    print(this.currentDownloadList.length);
-    print(this.waitingDownloadList.length);
   }
 }

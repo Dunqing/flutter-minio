@@ -123,15 +123,12 @@ class DownloadController {
 
   Future<void> dispatchDownload(DownloadFileInstance instance) {
     _onListen(downloadSize, fileSize) {
-      // print('currentSize $downloadSize || fileSize $fileSize');
       instance.downloadSize = downloadSize;
       this.updateDownloadSize(instance, instance.downloadSize);
     }
 
     _onCompleted(downloadSize, fileSize) {
-      print('completed currentSize $downloadSize || fileSize $fileSize');
       final filename = basename(instance.filename);
-      toast('下载完成 $filename');
       this.updateDownloadSize(instance, instance.downloadSize);
       this.updateDownloadState(instance, DownloadState.COMPLETED);
       this.scheduler.notify(instance);
@@ -163,9 +160,7 @@ class DownloadController {
   Future<DownloadFileInstance> advanceDownload(
       DownloadFileInstance instance) async {
     this.downloadStream.add(this.downloadList);
-    print('advance');
     await this.updateDownloadSize(instance, instance.downloadSize);
-    print('advance');
     this.scheduler.addAdvance(instance);
     return instance;
   }
@@ -189,7 +184,6 @@ class DownloadController {
       {bool deleteFile}) async {
     final List<int> okids = item.map((item) => item.id).toList();
     await this.scheduler.addDelete(okids, deleteFile);
-    print('开始删除数据库');
     this._db.delete(okids.join(',')).then((res) {
       // 还需要清理调度器的数据
       this.downloadList.forEach((instance) {

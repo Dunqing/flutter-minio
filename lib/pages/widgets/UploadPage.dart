@@ -30,14 +30,6 @@ class _UploadPageState extends State<UploadPage> {
     });
   }
 
-  getListObjects(String bucketName) {
-    this.minio.listIncompleteUploads(bucketName: bucketName).then((res) {
-      print(res);
-      // this.uploadList = res;
-    });
-    // listIncompleteUploads
-  }
-
   @override
   Widget build(BuildContext context) {
     final textStyle = TextStyle(fontSize: 18);
